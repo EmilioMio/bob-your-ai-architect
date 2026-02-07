@@ -458,8 +458,21 @@ const slides: Slide[] = [
 ];
 
 export default function Presentation() {
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(() => {
+    // Ensure we start at a valid slide index
+    return 0;
+  });
   const navigate = useNavigate();
+
+  // Safeguard: ensure currentSlide is within bounds
+  const safeCurrentSlide = Math.min(currentSlide, slides.length - 1);
+  
+  useEffect(() => {
+    // Reset to valid index if out of bounds
+    if (currentSlide >= slides.length) {
+      setCurrentSlide(slides.length - 1);
+    }
+  }, [currentSlide]);
 
   const goToSlide = useCallback((index: number) => {
     if (index >= 0 && index < slides.length) {
@@ -468,12 +481,12 @@ export default function Presentation() {
   }, []);
 
   const nextSlide = useCallback(() => {
-    goToSlide(currentSlide + 1);
-  }, [currentSlide, goToSlide]);
+    goToSlide(safeCurrentSlide + 1);
+  }, [safeCurrentSlide, goToSlide]);
 
   const prevSlide = useCallback(() => {
-    goToSlide(currentSlide - 1);
-  }, [currentSlide, goToSlide]);
+    goToSlide(safeCurrentSlide - 1);
+  }, [safeCurrentSlide, goToSlide]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -497,7 +510,7 @@ export default function Presentation() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [nextSlide, prevSlide, navigate]);
 
-  const slide = slides[currentSlide];
+  const slide = slides[safeCurrentSlide];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -510,7 +523,7 @@ export default function Presentation() {
           <Home className="w-5 h-5 text-muted-foreground" />
         </button>
         <div className="text-sm text-muted-foreground">
-          {currentSlide + 1} / {slides.length}
+          {safeCurrentSlide + 1} / {slides.length}
         </div>
       </header>
 
@@ -519,7 +532,7 @@ export default function Presentation() {
         <motion.div
           className="h-full bg-primary"
           initial={{ width: 0 }}
-          animate={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
+          animate={{ width: `${((safeCurrentSlide + 1) / slides.length) * 100}%` }}
           transition={{ duration: 0.3 }}
         />
       </div>
@@ -564,14 +577,14 @@ export default function Presentation() {
       <div className="fixed bottom-8 left-0 right-0 flex justify-center gap-4">
         <button
           onClick={prevSlide}
-          disabled={currentSlide === 0}
+          disabled={safeCurrentSlide === 0}
           className="p-3 rounded-full bg-card border border-border hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="w-6 h-6 text-foreground" />
         </button>
         <button
           onClick={nextSlide}
-          disabled={currentSlide === slides.length - 1}
+          disabled={safeCurrentSlide === slides.length - 1}
           className="p-3 rounded-full bg-card border border-border hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <ChevronRight className="w-6 h-6 text-foreground" />
@@ -585,7 +598,7 @@ export default function Presentation() {
             key={idx}
             onClick={() => goToSlide(idx)}
             className={`w-2 h-2 rounded-full transition-all ${
-              idx === currentSlide ? 'bg-primary w-6' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+              idx === safeCurrentSlide ? 'bg-primary w-6' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
             }`}
           />
         ))}
