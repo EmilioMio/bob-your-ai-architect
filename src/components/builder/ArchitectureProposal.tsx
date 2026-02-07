@@ -1,13 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ChevronDown, ChevronRight, FolderTree, FileCode, Shield, Zap, 
-  Coins, Settings, Download, Copy, ExternalLink, ArrowLeft,
-  Check, Lightbulb, Scale, Target, Loader2, X
+  ChevronDown, ChevronRight, FolderTree, FileCode, 
+  Download, Copy, ExternalLink, ArrowLeft,
+  Check, Lightbulb, Scale, Target, Loader2, X,
+  Database, Server, Code2, RefreshCw
 } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { ProjectFormData, Agent, ChatMessage } from './types';
+import { 
+  ProjectFormData, Agent, ChatMessage, 
+  GeneratedArchitecture, ArchitectureFile 
+} from './types';
+import { generateArchitecture } from '@/lib/bob-ai';
+import { DatabaseERDiagram } from './DatabaseERDiagram';
+import { Badge } from '@/components/ui/badge';
 
 interface ArchitectureProposalProps {
   formData: ProjectFormData;
@@ -16,494 +23,66 @@ interface ArchitectureProposalProps {
   onBack: () => void;
 }
 
-// File tree structure
-const generateFileTree = (projectName: string) => ({
-  name: projectName.toLowerCase().replace(/\s+/g, '-'),
-  type: 'folder' as const,
-  children: [
-    {
-      name: 'src',
-      type: 'folder' as const,
-      fileCount: 45,
-      children: [
-        {
-          name: 'app',
-          type: 'folder' as const,
-          description: 'Next.js routes',
-          children: [
-            { name: '(auth)', type: 'folder' as const, children: [
-              { name: 'login', type: 'folder' as const },
-              { name: 'register', type: 'folder' as const },
-            ]},
-            { name: '(dashboard)', type: 'folder' as const, children: [
-              { name: 'analytics', type: 'folder' as const },
-              { name: 'settings', type: 'folder' as const },
-              { name: 'page.tsx', type: 'file' as const },
-            ]},
-            { name: 'api', type: 'folder' as const, children: [
-              { name: 'auth', type: 'folder' as const },
-              { name: 'analytics', type: 'folder' as const },
-            ]},
-          ],
-        },
-        {
-          name: 'components',
-          type: 'folder' as const,
-          children: [
-            { name: 'ui', type: 'folder' as const, description: '12 reusable UI components', fileCount: 12 },
-            { name: 'features', type: 'folder' as const, description: 'Feature-specific components', fileCount: 8 },
-          ],
-        },
-        {
-          name: 'lib',
-          type: 'folder' as const,
-          children: [
-            { name: 'api', type: 'folder' as const, children: [{ name: 'client.ts', type: 'file' as const }] },
-            { name: 'auth', type: 'folder' as const, agentBadge: '🔒', children: [
-              { name: 'session.ts', type: 'file' as const },
-              { name: 'rbac.ts', type: 'file' as const, agentBadge: '🔒' },
-            ]},
-            { name: 'db', type: 'folder' as const, children: [
-              { name: 'client.ts', type: 'file' as const },
-              { name: 'schema.ts', type: 'file' as const },
-            ]},
-            { name: 'utils.ts', type: 'file' as const },
-          ],
-        },
-        {
-          name: 'hooks',
-          type: 'folder' as const,
-          children: [
-            { name: 'useAuth.ts', type: 'file' as const },
-            { name: 'useAnalytics.ts', type: 'file' as const },
-            { name: 'useRBAC.ts', type: 'file' as const, agentBadge: '🔒' },
-          ],
-        },
-      ],
-    },
-    { name: 'public', type: 'folder' as const, children: [{ name: 'images', type: 'folder' as const }] },
-    { name: '.env.example', type: 'file' as const },
-    { name: 'package.json', type: 'file' as const },
-    { name: 'tsconfig.json', type: 'file' as const },
-    { name: 'next.config.js', type: 'file' as const },
-  ],
-});
-
-const agentDecisions = [
-  {
-    id: 'security',
-    icon: '🔒',
-    name: 'Security Agent',
-    summary: ['Role-Based Access Control (RBAC)', 'JWT with refresh tokens', 'Environment-based secret management'],
-    details: [
-      { title: 'RBAC Implementation', items: ['Middleware in /src/lib/auth/rbac.ts', 'Roles: admin, editor, viewer', 'Permission checks on API routes'], files: ['/src/lib/auth/rbac.ts', '/src/middleware.ts'] },
-      { title: 'JWT Authentication', items: ['Access token: 15min expiry', 'Refresh token: 7 day expiry', 'HttpOnly cookies for security'] },
-    ],
-  },
-  {
-    id: 'performance',
-    icon: '⚡',
-    name: 'Performance Agent',
-    summary: ['Server Components by default', 'Redis caching for analytics', 'Dynamic imports for charts'],
-    details: [
-      { title: 'Rendering Strategy', items: ['Server Components for data fetching', 'Client Components only for interactivity', 'Streaming for long-running queries'] },
-    ],
-  },
-  {
-    id: 'cost',
-    icon: '💰',
-    name: 'Cost Agent',
-    summary: ['PostgreSQL on Supabase (free tier → $25/mo)', 'Vercel hosting (free tier covers MVP)', 'Redis caching only after 1000+ users'],
-    estimate: '$0-25/month for first 6 months',
-  },
-  {
-    id: 'structure',
-    icon: '📁',
-    name: 'Structure Agent',
-    summary: ['Feature-based organization', 'Colocation of related code', 'Clear separation: UI vs Business Logic'],
-  },
-];
-
-const architectureRules = [
-  {
-    category: 'Component Rules',
-    color: 'bg-primary',
-    rules: [
-      'UI components → /src/components/ui/',
-      'Feature components → /src/components/features/',
-      'Max 200 lines per component',
-      'One component per file',
-    ],
-  },
-  {
-    category: 'Business Logic Rules',
-    color: 'bg-emerald-500',
-    rules: [
-      'API calls only in /src/lib/api/',
-      'Database queries in /src/lib/db/',
-      'No business logic in components',
-    ],
-  },
-  {
-    category: 'Authentication Rules',
-    color: 'bg-purple-500',
-    icon: '🔒',
-    rules: [
-      'Session management in /src/lib/auth/',
-      'RBAC checks via middleware',
-      'No inline permission checks',
-    ],
-  },
-  {
-    category: 'Naming Conventions',
-    color: 'bg-slate-500',
-    rules: [
-      'Components: PascalCase',
-      'Utilities: camelCase',
-      'Hooks: must start with "use"',
-      'API routes: kebab-case',
-    ],
-  },
-];
-
-const toolRecommendations = [
-  { id: 'lovable', name: 'Lovable.dev', icon: '🎨', purpose: 'UI component scaffolding', reason: 'Your dashboard needs 12 UI components. Lovable excels at rapid UI generation.', action: 'Generate UI with Lovable' },
-  { id: 'cursor', name: 'Cursor AI', icon: '💻', purpose: 'API routes and business logic', reason: 'Complex RBAC and analytics logic benefits from Cursor\'s code generation.', action: 'Set up Cursor' },
-  { id: 'copilot', name: 'GitHub Copilot', icon: '🧪', purpose: 'Test generation', reason: 'Your 12 planned tests can be auto-generated from the architecture.', action: 'Generate tests' },
-];
-
-interface FileTreeNode {
-  name: string;
-  type: 'folder' | 'file';
-  children?: FileTreeNode[];
-  agentBadge?: string;
-  description?: string;
-  fileCount?: number;
-}
-
-interface TreeNodeProps {
-  node: FileTreeNode;
-  depth?: number;
-}
-
-function TreeNode({ node, depth = 0 }: TreeNodeProps) {
-  const [isOpen, setIsOpen] = useState(depth < 2);
-  const hasChildren = node.type === 'folder' && node.children && node.children.length > 0;
-
-  return (
-    <div className="select-none">
-      <div
-        className={`flex items-center gap-1.5 py-1 px-1 rounded hover:bg-muted/50 cursor-pointer text-sm ${
-          depth === 0 ? 'font-medium' : ''
-        }`}
-        style={{ paddingLeft: `${depth * 12 + 4}px` }}
-        onClick={() => hasChildren && setIsOpen(!isOpen)}
-      >
-        {hasChildren ? (
-          isOpen ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-        ) : (
-          <span className="w-3.5" />
-        )}
-        
-        {node.type === 'folder' ? (
-          <FolderTree className="w-4 h-4 text-primary" />
-        ) : (
-          <FileCode className="w-4 h-4 text-muted-foreground" />
-        )}
-        
-        <span className="text-foreground">{node.name}</span>
-        
-        {node.agentBadge && (
-          <span className="text-xs">{node.agentBadge}</span>
-        )}
-        
-        {node.fileCount && (
-          <span className="text-xs text-muted-foreground">({node.fileCount})</span>
-        )}
-      </div>
-      
-      <AnimatePresence>
-        {isOpen && hasChildren && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            {node.children!.map((child, idx) => (
-              <TreeNode key={`${child.name}-${idx}`} node={child} depth={depth + 1} />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// Generate file contents for the zip
-const generateFileContents = (projectName: string, formData: ProjectFormData) => {
-  const safeName = projectName.toLowerCase().replace(/\s+/g, '-');
-  
-  return {
-    'README.md': `# ${projectName}
-
-## Project Overview
-${formData.project}
-
-## Team
-- Size: ${formData.teamSize}
-- Experience: ${formData.experience}
-- Timeline: ${formData.timeline}
-
-## Getting Started
-
-\`\`\`bash
-npm install
-npm run dev
-\`\`\`
-
-## Architecture
-This project follows a modular monolith architecture with feature-based organization.
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed architectural guidelines.
-
-## Tech Stack
-- Frontend: Next.js 14 (App Router), React, TypeScript
-- Styling: Tailwind CSS
-- Database: PostgreSQL (Supabase)
-- Auth: NextAuth.js with JWT
-- Deployment: Vercel
-`,
-    'ARCHITECTURE.md': `# Architecture Guidelines
-
-## File Structure Rules
-
-### Component Rules
-- UI components → /src/components/ui/
-- Feature components → /src/components/features/
-- Max 200 lines per component
-- One component per file
-
-### Business Logic Rules
-- API calls only in /src/lib/api/
-- Database queries in /src/lib/db/
-- No business logic in components
-
-### Authentication Rules
-- Session management in /src/lib/auth/
-- RBAC checks via middleware
-- No inline permission checks
-
-### Naming Conventions
-- Components: PascalCase
-- Utilities: camelCase
-- Hooks: must start with "use"
-- API routes: kebab-case
-
-## Security Considerations
-- Role-Based Access Control (RBAC)
-- JWT with refresh tokens
-- Environment-based secret management
-
-## Performance Guidelines
-- Server Components by default
-- Redis caching for analytics (at scale)
-- Dynamic imports for heavy libraries
-`,
-    'package.json': JSON.stringify({
-      name: safeName,
-      version: '0.1.0',
-      private: true,
-      scripts: {
-        dev: 'next dev',
-        build: 'next build',
-        start: 'next start',
-        lint: 'next lint',
-      },
-      dependencies: {
-        next: '^14.0.0',
-        react: '^18.2.0',
-        'react-dom': '^18.2.0',
-        typescript: '^5.0.0',
-        '@tanstack/react-query': '^5.0.0',
-        'next-auth': '^4.24.0',
-        tailwindcss: '^3.4.0',
-        zod: '^3.22.0',
-      },
-      devDependencies: {
-        '@types/node': '^20.0.0',
-        '@types/react': '^18.2.0',
-        '@types/react-dom': '^18.2.0',
-        eslint: '^8.0.0',
-        'eslint-config-next': '^14.0.0',
-      },
-    }, null, 2),
-    '.env.example': `# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/db
-
-# Authentication
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret-here
-
-# OAuth Providers (optional)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
-`,
-    'tsconfig.json': JSON.stringify({
-      compilerOptions: {
-        target: 'es5',
-        lib: ['dom', 'dom.iterable', 'esnext'],
-        allowJs: true,
-        skipLibCheck: true,
-        strict: true,
-        noEmit: true,
-        esModuleInterop: true,
-        module: 'esnext',
-        moduleResolution: 'bundler',
-        resolveJsonModule: true,
-        isolatedModules: true,
-        jsx: 'preserve',
-        incremental: true,
-        plugins: [{ name: 'next' }],
-        paths: {
-          '@/*': ['./src/*'],
-        },
-      },
-      include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
-      exclude: ['node_modules'],
-    }, null, 2),
-    'next.config.js': `/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  images: {
-    domains: [],
-  },
-};
-
-module.exports = nextConfig;
-`,
-    'src/app/layout.tsx': `import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
-
-export const metadata: Metadata = {
-  title: '${projectName}',
-  description: '${formData.project}',
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
-    </html>
-  );
-}
-`,
-    'src/app/page.tsx': `export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold mb-4">${projectName}</h1>
-      <p className="text-gray-600">Your project is ready to go!</p>
-    </main>
-  );
-}
-`,
-    'src/app/globals.css': `@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
-`,
-    'src/lib/utils.ts': `import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-`,
-    'src/lib/api/client.ts': `// API client for making requests
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
-
-export async function apiClient<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
-  const response = await fetch(\`\${API_BASE}\${endpoint}\`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(\`API error: \${response.status}\`);
-  }
-
-  return response.json();
-}
-`,
-    'src/lib/auth/session.ts': `// Session management utilities
-import { getServerSession } from 'next-auth';
-
-export async function getSession() {
-  return await getServerSession();
-}
-
-export async function requireAuth() {
-  const session = await getSession();
-  if (!session) {
-    throw new Error('Authentication required');
-  }
-  return session;
-}
-`,
-    'src/hooks/useAuth.ts': `'use client';
-
-import { useSession } from 'next-auth/react';
-
-export function useAuth() {
-  const { data: session, status } = useSession();
-  
-  return {
-    user: session?.user,
-    isLoading: status === 'loading',
-    isAuthenticated: status === 'authenticated',
-  };
-}
-`,
-  };
-};
-
-export function ArchitectureProposal({ formData, agents, onBack }: ArchitectureProposalProps) {
+export function ArchitectureProposal({ formData, agents, conversationHistory, onBack }: ArchitectureProposalProps) {
+  const [architecture, setArchitecture] = useState<GeneratedArchitecture | null>(null);
+  const [isGenerating, setIsGenerating] = useState(true);
+  const [generationStage, setGenerationStage] = useState('Initializing...');
+  const [activeAgents, setActiveAgents] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [expandedAgents, setExpandedAgents] = useState<string[]>([]);
+  const [expandedTables, setExpandedTables] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingFiles, setIsGeneratingFiles] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  
-  const projectName = formData.project.split(' ').slice(0, 3).join(' ');
-  const fileTree = generateFileTree(projectName);
+
+  useEffect(() => {
+    loadArchitecture();
+  }, []);
+
+  const loadArchitecture = async () => {
+    setIsGenerating(true);
+    setError(null);
+    
+    const stages = [
+      { text: 'Analyzing project requirements...', agents: ['Structure Agent'] },
+      { text: 'Consulting specialist agents...', agents: ['Security Agent', 'Performance Agent', 'Cost Agent'] },
+      { text: 'Designing file structure...', agents: ['Structure Agent'] },
+      { text: 'Designing database schema...', agents: ['Database Agent'] },
+      { text: 'Generating recommendations...', agents: ['All Specialists'] },
+      { text: 'Finalizing architecture...', agents: [] }
+    ];
+
+    let currentStage = 0;
+    const stageInterval = setInterval(() => {
+      if (currentStage < stages.length) {
+        setGenerationStage(stages[currentStage].text);
+        setActiveAgents(stages[currentStage].agents);
+        currentStage++;
+      }
+    }, 1200);
+
+    try {
+      const generated = await generateArchitecture(formData, conversationHistory);
+      
+      clearInterval(stageInterval);
+      
+      if (generated && typeof generated === 'object') {
+        setArchitecture(generated as unknown as GeneratedArchitecture);
+        setError(null);
+      } else {
+        throw new Error('Invalid architecture response');
+      }
+    } catch (err) {
+      clearInterval(stageInterval);
+      console.error('Failed to generate architecture:', err);
+      setError('Failed to generate architecture. Please try again.');
+    } finally {
+      setIsGenerating(false);
+      setGenerationStage('');
+      setActiveAgents([]);
+    }
+  };
 
   const toggleAgent = (id: string) => {
     setExpandedAgents(prev => 
@@ -511,8 +90,15 @@ export function ArchitectureProposal({ formData, agents, onBack }: ArchitectureP
     );
   };
 
+  const toggleTable = (name: string) => {
+    setExpandedTables(prev => 
+      prev.includes(name) ? prev.filter(t => t !== name) : [...prev, name]
+    );
+  };
+
   const handleCopyRules = () => {
-    const rulesText = architectureRules.map(cat => 
+    if (!architecture) return;
+    const rulesText = architecture.architectureRules.map(cat => 
       `## ${cat.category}\n${cat.rules.map(r => `- ${r}`).join('\n')}`
     ).join('\n\n');
     navigator.clipboard.writeText(rulesText);
@@ -521,86 +107,126 @@ export function ArchitectureProposal({ formData, agents, onBack }: ArchitectureP
   };
 
   const handleGenerateFiles = async () => {
-    setIsGenerating(true);
+    if (!architecture) return;
+    setIsGeneratingFiles(true);
     setGenerationProgress(0);
 
     try {
       const zip = new JSZip();
-      const files = generateFileContents(projectName, formData);
+      const files = generateFileContents(architecture, formData);
       const fileEntries = Object.entries(files);
       
-      // Simulate progress
       for (let i = 0; i < fileEntries.length; i++) {
         const [path, content] = fileEntries[i];
         zip.file(path, content);
         setGenerationProgress(Math.round(((i + 1) / fileEntries.length) * 100));
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
-      // Generate and download
       const blob = await zip.generateAsync({ type: 'blob' });
-      const safeName = projectName.toLowerCase().replace(/\s+/g, '-');
+      const safeName = architecture.projectName.toLowerCase().replace(/\s+/g, '-');
       saveAs(blob, `${safeName}-project.zip`);
       
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Error generating files:', error);
     } finally {
-      setIsGenerating(false);
+      setIsGeneratingFiles(false);
       setGenerationProgress(0);
     }
   };
 
   const handleExportArchitecture = () => {
-    const safeName = projectName.toLowerCase().replace(/\s+/g, '-');
+    if (!architecture) return;
+    const safeName = architecture.projectName.toLowerCase().replace(/\s+/g, '-');
     
-    // Export JSON
-    const architectureData = {
-      projectName,
-      formData,
-      fileTree,
-      agentDecisions,
-      architectureRules,
-      toolRecommendations,
-      generatedAt: new Date().toISOString(),
-    };
-    
-    const jsonBlob = new Blob([JSON.stringify(architectureData, null, 2)], { type: 'application/json' });
+    const jsonBlob = new Blob([JSON.stringify(architecture, null, 2)], { type: 'application/json' });
     saveAs(jsonBlob, `${safeName}-architecture.json`);
-
-    // Export Markdown
-    const mdContent = `# ${projectName} - Architecture Documentation
-
-## Project Details
-- **Description**: ${formData.project}
-- **Team Size**: ${formData.teamSize}
-- **Timeline**: ${formData.timeline}
-- **Experience Level**: ${formData.experience}
-
-## Agent Recommendations
-
-${agentDecisions.map(agent => `### ${agent.icon} ${agent.name}
-${agent.summary.map(s => `- ${s}`).join('\n')}
-${agent.estimate ? `\n**Estimate**: ${agent.estimate}` : ''}`).join('\n\n')}
-
-## Architectural Rules
-
-${architectureRules.map(cat => `### ${cat.category} ${cat.icon || ''}
-${cat.rules.map(r => `- ${r}`).join('\n')}`).join('\n\n')}
-
-## Recommended Tools
-
-${toolRecommendations.map(tool => `### ${tool.icon} ${tool.name}
-- **Purpose**: ${tool.purpose}
-- **Why**: ${tool.reason}`).join('\n\n')}
-
----
-*Generated by Bob the Architect on ${new Date().toLocaleDateString()}*
-`;
-
-    const mdBlob = new Blob([mdContent], { type: 'text/markdown' });
-    saveAs(mdBlob, `${safeName}-architecture.md`);
   };
+
+  // Loading state with agent activity
+  if (isGenerating) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-[400px] flex flex-col items-center justify-center p-8"
+      >
+        <div className="relative mb-8">
+          <motion.div
+            className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center"
+            animate={{ 
+              scale: [1, 1.1, 1],
+              boxShadow: [
+                '0 0 0 0 rgba(var(--primary), 0.2)',
+                '0 0 0 20px rgba(var(--primary), 0)',
+                '0 0 0 0 rgba(var(--primary), 0)'
+              ]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <h3 className="text-xl font-semibold text-foreground mb-2">
+            Bob is designing your architecture
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            {generationStage}
+          </p>
+        </motion.div>
+
+        {activeAgents.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-wrap justify-center gap-2"
+          >
+            {activeAgents.map((agent) => (
+              <motion.div
+                key={agent}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20"
+              >
+                <span className="text-sm font-medium text-primary">{agent}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </motion.div>
+    );
+  }
+
+  // Error state
+  if (error || !architecture) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-[400px] flex flex-col items-center justify-center p-8"
+      >
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+            <X className="w-8 h-8 text-destructive" />
+          </div>
+          <p className="text-lg text-foreground mb-4">
+            {error || 'Failed to generate architecture'}
+          </p>
+          <button onClick={loadArchitecture} className="btn-primary">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try Again
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -610,15 +236,23 @@ ${toolRecommendations.map(tool => `### ${tool.icon} ${tool.name}
       className="space-y-6"
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Target className="w-6 h-6 text-primary" />
-            Your Custom Architecture
+            {architecture.projectName}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Designed by Bob's specialist team for your {formData.teamSize} team, {formData.timeline.replace('-', ' to ')} project
+            {architecture.summary}
           </p>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="outline" className="text-xs">
+              {architecture.projectType}
+            </Badge>
+            <span className="text-xs text-muted-foreground">
+              {formData.teamSize} team • {formData.timeline}
+            </span>
+          </div>
         </div>
         <button onClick={onBack} className="btn-ghost text-sm">
           <ArrowLeft className="w-4 h-4 mr-1" />
@@ -626,135 +260,283 @@ ${toolRecommendations.map(tool => `### ${tool.icon} ${tool.name}
         </button>
       </div>
 
-      {/* Three Panel Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Panel 1: File Structure */}
-        <div className="lg:col-span-1 card-elevated p-4 max-h-[500px] overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
-            <h3 className="font-semibold text-foreground flex items-center gap-2">
-              <FolderTree className="w-4 h-4 text-primary" />
-              File Structure
-            </h3>
-          </div>
-          <div className="overflow-y-auto flex-1 -mr-2 pr-2">
-            <TreeNode node={fileTree} />
-          </div>
+      {/* Main Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* LEFT COLUMN */}
+        <div className="space-y-4">
+          {/* Frontend Structure */}
+          {architecture.fileStructure.frontend && (
+            <div className="card-elevated p-4 max-h-[300px] overflow-hidden flex flex-col">
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
+                <Code2 className="w-4 h-4 text-primary" />
+                <h3 className="font-semibold text-foreground">Frontend Structure</h3>
+              </div>
+              <div className="overflow-y-auto flex-1 -mr-2 pr-2">
+                <FileTreeNode node={architecture.fileStructure.frontend} />
+              </div>
+            </div>
+          )}
+
+          {/* Backend Structure */}
+          {architecture.fileStructure.backend && (
+            <div className="card-elevated p-4 max-h-[300px] overflow-hidden flex flex-col">
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
+                <Server className="w-4 h-4 text-emerald-500" />
+                <h3 className="font-semibold text-foreground">Backend Structure</h3>
+              </div>
+              <div className="overflow-y-auto flex-1 -mr-2 pr-2">
+                <FileTreeNode node={architecture.fileStructure.backend} />
+              </div>
+            </div>
+          )}
+
+          {/* API Endpoints */}
+          {architecture.apiEndpoints && architecture.apiEndpoints.length > 0 && (
+            <div className="card-elevated p-4 max-h-[250px] overflow-hidden flex flex-col">
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
+                <ExternalLink className="w-4 h-4 text-purple-500" />
+                <h3 className="font-semibold text-foreground">API Endpoints</h3>
+              </div>
+              <div className="overflow-y-auto flex-1 space-y-2 -mr-2 pr-2">
+                {architecture.apiEndpoints.map((endpoint, idx) => (
+                  <div key={idx} className="p-2 rounded-lg bg-muted/50 border border-border">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        endpoint.method === 'GET' ? 'bg-emerald-500/20 text-emerald-600' :
+                        endpoint.method === 'POST' ? 'bg-blue-500/20 text-blue-600' :
+                        endpoint.method === 'PUT' ? 'bg-amber-500/20 text-amber-600' :
+                        endpoint.method === 'DELETE' ? 'bg-red-500/20 text-red-600' :
+                        'bg-purple-500/20 text-purple-600'
+                      }`}>
+                        {endpoint.method}
+                      </span>
+                      <code className="text-xs font-mono text-foreground">{endpoint.path}</code>
+                      {endpoint.auth && (
+                        <span className="text-[10px] text-muted-foreground">🔒</span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1">{endpoint.purpose}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Panel 2: Agent Decisions */}
-        <div className="lg:col-span-1 card-elevated p-4 max-h-[500px] overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
-            <h3 className="font-semibold text-foreground flex items-center gap-2">
-              <Lightbulb className="w-4 h-4 text-amber-500" />
-              Agent Decisions
-            </h3>
-          </div>
-          <div className="overflow-y-auto flex-1 space-y-3 -mr-2 pr-2">
-            {agentDecisions.map((agent) => (
-              <div key={agent.id} className="border border-border rounded-xl overflow-hidden">
-                <button
-                  onClick={() => toggleAgent(agent.id)}
-                  className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{agent.icon}</span>
-                    <span className="font-medium text-sm text-foreground">{agent.name}</span>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expandedAgents.includes(agent.id) ? 'rotate-180' : ''}`} />
-                </button>
-                
-                <AnimatePresence>
-                  {expandedAgents.includes(agent.id) && (
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: 'auto' }}
-                      exit={{ height: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="p-3 pt-0 space-y-2">
-                        {agent.summary.map((item, idx) => (
-                          <div key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
-                            <Check className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" />
-                            <span>{item}</span>
-                          </div>
-                        ))}
-                        {agent.estimate && (
-                          <div className="mt-2 pt-2 border-t border-border text-xs text-primary font-medium">
-                            Est. cost: {agent.estimate}
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+        {/* RIGHT COLUMN */}
+        <div className="space-y-4">
+          {/* Database Schema */}
+          {architecture.database?.required && (
+            <div className="card-elevated p-4">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-amber-500" />
+                  <h3 className="font-semibold text-foreground">Database Schema</h3>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {architecture.database.type}
+                </Badge>
               </div>
-            ))}
 
-            {/* Trade-off Resolution */}
-            <div className="border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Scale className="w-4 h-4 text-amber-600" />
-                <span className="font-medium text-sm text-foreground">Trade-off Resolution</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Security Agent recommended microservices; Cost Agent recommended monolith. 
-                <span className="text-foreground font-medium"> Bob's decision: Modular Monolith</span> — 
-                easier for your team size, can split later.
+              <p className="text-xs text-muted-foreground mb-3">
+                {architecture.database.description}
               </p>
+
+              {/* ER Diagram */}
+              {architecture.database.relationships.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-medium text-foreground mb-2">Entity Relationships</p>
+                  <DatabaseERDiagram 
+                    tables={architecture.database.tables}
+                    relationships={architecture.database.relationships}
+                  />
+                </div>
+              )}
+
+              {/* Tables List */}
+              <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                {architecture.database.tables.map((table) => (
+                  <div key={table.name} className="border border-border rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleTable(table.name)}
+                      className="w-full flex items-center justify-between p-2 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Database className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-sm font-medium text-foreground">{table.name}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          ({table.columns.length} cols)
+                        </span>
+                      </div>
+                      <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${
+                        expandedTables.includes(table.name) ? 'rotate-180' : ''
+                      }`} />
+                    </button>
+                    
+                    <AnimatePresence>
+                      {expandedTables.includes(table.name) && (
+                        <motion.div
+                          initial={{ height: 0 }}
+                          animate={{ height: 'auto' }}
+                          exit={{ height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="p-2 pt-0 space-y-1">
+                            {table.columns.map((col) => (
+                              <div key={col.name} className="flex items-center justify-between text-[11px]">
+                                <span className="flex items-center gap-1">
+                                  <span className="font-mono text-foreground">{col.name}</span>
+                                  {col.primaryKey && <span title="Primary Key">🔑</span>}
+                                  {col.unique && <span title="Unique">✨</span>}
+                                </span>
+                                <span className="text-muted-foreground font-mono">{col.type}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Agent Decisions */}
+          <div className="card-elevated p-4 max-h-[350px] overflow-hidden flex flex-col">
+            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
+              <Lightbulb className="w-4 h-4 text-amber-500" />
+              <h3 className="font-semibold text-foreground">Agent Decisions</h3>
+            </div>
+            <div className="overflow-y-auto flex-1 space-y-2 -mr-2 pr-2">
+              {architecture.agentDecisions.map((agent) => (
+                <div key={agent.id} className="border border-border rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => toggleAgent(agent.id)}
+                    className="w-full flex items-center justify-between p-2 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">{agent.icon}</span>
+                      <span className="text-sm font-medium text-foreground">{agent.name}</span>
+                    </div>
+                    <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${
+                      expandedAgents.includes(agent.id) ? 'rotate-180' : ''
+                    }`} />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {expandedAgents.includes(agent.id) && (
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: 'auto' }}
+                        exit={{ height: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-2 pt-0 space-y-1.5">
+                          {agent.summary.map((item, idx) => (
+                            <div key={idx} className="flex items-start gap-2 text-[11px] text-muted-foreground">
+                              <Check className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" />
+                              <span>{item}</span>
+                            </div>
+                          ))}
+                          {agent.reasoning && (
+                            <p className="text-[10px] text-primary/80 mt-2 pt-2 border-t border-border">
+                              💡 {agent.reasoning}
+                            </p>
+                          )}
+                          {agent.estimate && (
+                            <p className="text-[11px] text-primary font-medium">
+                              Est: {agent.estimate}
+                            </p>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
+
+              {/* Trade-off Resolution */}
+              {architecture.tradeoffResolution && (
+                <div className="border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 rounded-lg p-3 mt-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Scale className="w-4 h-4 text-amber-600" />
+                    <span className="font-medium text-sm text-foreground">Trade-off Resolution</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {architecture.tradeoffResolution.conflict}: 
+                    <span className="text-foreground font-medium"> {architecture.tradeoffResolution.decision}</span>
+                    {' — '}{architecture.tradeoffResolution.reasoning}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Panel 3: Rules & Tools */}
-        <div className="lg:col-span-1 card-elevated p-4 max-h-[500px] overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
-            <h3 className="font-semibold text-foreground flex items-center gap-2">
-              <Settings className="w-4 h-4 text-muted-foreground" />
-              Rules & Tools
-            </h3>
-            <button
-              onClick={handleCopyRules}
-              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-            >
-              {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-          <div className="overflow-y-auto flex-1 space-y-4 -mr-2 pr-2">
-            {/* Rules */}
-            <div className="space-y-3">
-              {architectureRules.map((category) => (
-                <div key={category.category} className="space-y-1.5">
+          {/* Rules & Tech Stack */}
+          <div className="card-elevated p-4">
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
+              <h3 className="font-semibold text-foreground">Rules & Stack</h3>
+              <button
+                onClick={handleCopyRules}
+                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            
+            {/* Architecture Rules */}
+            <div className="space-y-2 mb-4">
+              {architecture.architectureRules.slice(0, 3).map((category) => (
+                <div key={category.category} className="space-y-1">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${category.color}`} />
-                    <span className="text-xs font-medium text-foreground">
-                      {category.category} {category.icon}
-                    </span>
+                    <span className="text-xs font-medium text-foreground">{category.category}</span>
                   </div>
-                  {category.rules.map((rule, idx) => (
-                    <p key={idx} className="text-xs text-muted-foreground pl-4">
-                      ✓ {rule}
-                    </p>
+                  {category.rules.slice(0, 2).map((rule, idx) => (
+                    <p key={idx} className="text-[11px] text-muted-foreground pl-4">✓ {rule}</p>
                   ))}
                 </div>
               ))}
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-border pt-4">
-              <h4 className="text-xs font-medium text-foreground mb-3">Recommended Tools</h4>
-              <div className="space-y-2">
-                {toolRecommendations.map((tool) => (
-                  <div key={tool.id} className="p-2 rounded-lg border border-border hover:border-primary/30 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">{tool.icon}</span>
-                      <span className="text-xs font-medium text-foreground">{tool.name}</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">{tool.purpose}</p>
-                  </div>
-                ))}
+            {/* Tech Stack */}
+            <div className="border-t border-border pt-3">
+              <h4 className="text-xs font-medium text-foreground mb-2">Tech Stack</h4>
+              <div className="grid grid-cols-2 gap-1 text-[11px]">
+                {architecture.techStack.frontend && (
+                  <p><span className="text-muted-foreground">Frontend:</span> {architecture.techStack.frontend}</p>
+                )}
+                {architecture.techStack.backend && (
+                  <p><span className="text-muted-foreground">Backend:</span> {architecture.techStack.backend}</p>
+                )}
+                {architecture.techStack.database && (
+                  <p><span className="text-muted-foreground">DB:</span> {architecture.techStack.database}</p>
+                )}
+                {architecture.techStack.deployment && (
+                  <p><span className="text-muted-foreground">Deploy:</span> {architecture.techStack.deployment}</p>
+                )}
               </div>
             </div>
+
+            {/* Tool Recommendations */}
+            {architecture.toolRecommendations.length > 0 && (
+              <div className="border-t border-border pt-3 mt-3">
+                <h4 className="text-xs font-medium text-foreground mb-2">Recommended Tools</h4>
+                <div className="space-y-1.5">
+                  {architecture.toolRecommendations.slice(0, 3).map((tool) => (
+                    <div key={tool.id} className="flex items-start gap-2">
+                      <span>{tool.icon}</span>
+                      <div>
+                        <span className="text-xs font-medium text-foreground">{tool.name}</span>
+                        <p className="text-[10px] text-muted-foreground">{tool.reason}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -763,12 +545,12 @@ ${toolRecommendations.map(tool => `### ${tool.icon} ${tool.name}
       <div className="flex flex-col sm:flex-row gap-3">
         <motion.button
           className="flex-1 btn-primary py-4 text-lg group disabled:opacity-70"
-          whileHover={{ scale: isGenerating ? 1 : 1.01 }}
-          whileTap={{ scale: isGenerating ? 1 : 0.99 }}
+          whileHover={{ scale: isGeneratingFiles ? 1 : 1.01 }}
+          whileTap={{ scale: isGeneratingFiles ? 1 : 0.99 }}
           onClick={handleGenerateFiles}
-          disabled={isGenerating}
+          disabled={isGeneratingFiles}
         >
-          {isGenerating ? (
+          {isGeneratingFiles ? (
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
               Generating... {generationProgress}%
@@ -814,7 +596,7 @@ ${toolRecommendations.map(tool => `### ${tool.icon} ${tool.name}
               </div>
               
               <p className="text-sm text-muted-foreground mb-4">
-                Your "{projectName}" project has been downloaded. Push it to GitHub in 3 steps:
+                Your "{architecture.projectName}" project has been downloaded. Push it to GitHub in 3 steps:
               </p>
               
               <div className="bg-muted/50 rounded-xl p-4 mb-4 space-y-3">
@@ -849,7 +631,7 @@ ${toolRecommendations.map(tool => `### ${tool.icon} ${tool.name}
 
               <div className="flex flex-col gap-2">
                 <a
-                  href={`https://github.com/new?name=${encodeURIComponent(projectName.toLowerCase().replace(/\s+/g, '-'))}&description=${encodeURIComponent(formData.project)}`}
+                  href={`https://github.com/new?name=${encodeURIComponent(architecture.projectName.toLowerCase().replace(/\s+/g, '-'))}&description=${encodeURIComponent(formData.project)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full btn-primary flex items-center justify-center gap-2"
@@ -872,4 +654,225 @@ ${toolRecommendations.map(tool => `### ${tool.icon} ${tool.name}
       </AnimatePresence>
     </motion.div>
   );
+}
+
+// File tree node component
+function FileTreeNode({ node, depth = 0 }: { node: ArchitectureFile; depth?: number }) {
+  const [isOpen, setIsOpen] = useState(depth < 2);
+  const hasChildren = node.type === 'folder' && node.children && node.children.length > 0;
+
+  return (
+    <div className="select-none">
+      <div
+        className={`flex items-center gap-1.5 py-1 px-1 rounded hover:bg-muted/50 cursor-pointer text-sm ${
+          depth === 0 ? 'font-medium' : ''
+        }`}
+        style={{ paddingLeft: `${depth * 12 + 4}px` }}
+        onClick={() => hasChildren && setIsOpen(!isOpen)}
+      >
+        {hasChildren ? (
+          isOpen ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+        ) : (
+          <span className="w-3.5" />
+        )}
+        
+        {node.type === 'folder' ? (
+          <FolderTree className="w-4 h-4 text-primary" />
+        ) : (
+          <FileCode className="w-4 h-4 text-muted-foreground" />
+        )}
+        
+        <span className="text-foreground">{node.name}</span>
+        
+        {node.agentBadge && <span className="text-xs">{node.agentBadge}</span>}
+        {node.fileCount && <span className="text-xs text-muted-foreground">({node.fileCount})</span>}
+        {node.description && <span className="text-[10px] text-muted-foreground ml-1 hidden sm:inline">{node.description}</span>}
+      </div>
+      
+      <AnimatePresence>
+        {isOpen && hasChildren && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            {node.children!.map((child, idx) => (
+              <FileTreeNode key={`${child.name}-${idx}`} node={child} depth={depth + 1} />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// Generate file contents based on AI architecture
+function generateFileContents(architecture: GeneratedArchitecture, formData: ProjectFormData): Record<string, string> {
+  const safeName = architecture.projectName.toLowerCase().replace(/\s+/g, '-');
+  
+  const files: Record<string, string> = {
+    'README.md': `# ${architecture.projectName}
+
+## Project Overview
+${formData.project}
+
+## Project Type
+${architecture.projectType}
+
+## Summary
+${architecture.summary}
+
+## Team
+- Size: ${formData.teamSize}
+- Experience: ${formData.experience}
+- Timeline: ${formData.timeline}
+
+## Tech Stack
+${Object.entries(architecture.techStack)
+  .filter(([_, v]) => v)
+  .map(([k, v]) => `- **${k}**: ${v}`)
+  .join('\n')}
+
+## Getting Started
+
+\`\`\`bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+\`\`\`
+
+## Architecture
+This project follows the architecture designed by Bob AI.
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed guidelines.
+`,
+    'ARCHITECTURE.md': `# Architecture Guidelines
+
+## File Structure Rules
+
+${architecture.architectureRules.map(cat => `### ${cat.category}
+${cat.rules.map(r => `- ${r}`).join('\n')}`).join('\n\n')}
+
+## Agent Recommendations
+
+${architecture.agentDecisions.map(agent => `### ${agent.icon} ${agent.name}
+${agent.summary.map(s => `- ${s}`).join('\n')}
+${agent.reasoning ? `\n*${agent.reasoning}*` : ''}
+${agent.estimate ? `\n**Estimate**: ${agent.estimate}` : ''}`).join('\n\n')}
+
+## Tool Recommendations
+
+${architecture.toolRecommendations.map(tool => `### ${tool.icon} ${tool.name}
+- **Purpose**: ${tool.purpose}
+- **Why**: ${tool.reason}`).join('\n\n')}
+
+---
+*Generated by Bob the Architect on ${new Date().toLocaleDateString()}*
+`,
+  };
+
+  // Add database schema if required
+  if (architecture.database?.required) {
+    files['DATABASE.md'] = `# Database Schema
+
+## Type: ${architecture.database.type}
+
+${architecture.database.description}
+
+## Tables
+
+${architecture.database.tables.map(table => `### ${table.name}
+| Column | Type | Constraints |
+|--------|------|-------------|
+${table.columns.map(col => 
+  `| ${col.name} | ${col.type} | ${[
+    col.primaryKey && 'PK',
+    col.unique && 'UNIQUE',
+    col.foreignKey && `FK → ${col.foreignKey}`
+  ].filter(Boolean).join(', ') || '-'} |`
+).join('\n')}`).join('\n\n')}
+
+## Relationships
+
+${architecture.database.relationships.map(rel => 
+  `- **${rel.from}** ${rel.type} **${rel.to}** via \`${rel.foreignKey}\``
+).join('\n')}
+`;
+  }
+
+  // Add API docs if endpoints exist
+  if (architecture.apiEndpoints && architecture.apiEndpoints.length > 0) {
+    files['API.md'] = `# API Documentation
+
+## Endpoints
+
+${architecture.apiEndpoints.map(ep => `### ${ep.method} ${ep.path}
+- **Purpose**: ${ep.purpose}
+- **Auth Required**: ${ep.auth ? 'Yes 🔒' : 'No'}`).join('\n\n')}
+`;
+  }
+
+  // Add package.json
+  files['package.json'] = JSON.stringify({
+    name: safeName,
+    version: '0.1.0',
+    private: true,
+    scripts: {
+      dev: 'npm run start',
+      build: 'npm run build',
+      start: 'npm run start',
+      lint: 'npm run lint',
+    },
+    dependencies: {},
+    devDependencies: {},
+  }, null, 2);
+
+  // Add .env.example
+  files['.env.example'] = `# Environment Variables
+# Copy this file to .env and fill in your values
+
+# Database
+DATABASE_URL=
+
+# Authentication
+AUTH_SECRET=
+
+# API Keys
+`;
+
+  // Add .gitignore
+  files['.gitignore'] = `# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+dist/
+build/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+`;
+
+  return files;
 }

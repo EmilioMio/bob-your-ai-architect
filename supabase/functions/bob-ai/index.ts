@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface ChatMessage {
@@ -15,6 +15,7 @@ interface ProjectFormData {
   teamSize: string;
   timeline: string;
   experience: string;
+  projectType?: string;
   techPreferences?: {
     frontend: string[];
     backend: string[];
@@ -23,7 +24,6 @@ interface ProjectFormData {
   };
 }
 
-// Helper to flatten techPreferences object into a string
 function getTechPreferencesString(techPreferences?: ProjectFormData['techPreferences']): string {
   if (!techPreferences) return 'None specified';
   const all = [
@@ -122,53 +122,211 @@ Invalid: random letters, nonsense, single meaningless words
 Return ONLY the JSON object.`;
         break;
 
-      case "generate_architecture":
+      case "generate_architecture": {
         const conversationText = conversationHistory?.map((msg: ChatMessage) => 
           `${msg.role === 'bot' ? 'Bob' : 'User'}: ${msg.content}`
         ).join('\n') || '';
 
-        systemPrompt = `You are Bob, an expert software architect. Generate complete project architecture.`;
-        userPrompt = `Based on this conversation, generate a complete project architecture.
-
-PROJECT: ${formData.project}
-Team: ${formData.teamSize}
-Timeline: ${formData.timeline}
-Experience: ${formData.experience}
-Tech: ${getTechPreferencesString(formData.techPreferences)}
-
-CONVERSATION:
+        systemPrompt = `You are Bob, a senior software architect with 15+ years of experience designing production systems across all tech stacks - web, mobile, backend, desktop, and embedded systems.`;
+        
+        userPrompt = `CONVERSATION WITH USER:
 ${conversationText}
 
-Generate architecture including file structure, rules, agent decisions, and tech stack.
+PROJECT DETAILS:
+Title: ${formData.project}
+Project Type: ${formData.projectType || 'Not specified'}
+Team Size: ${formData.teamSize}
+Timeline: ${formData.timeline}
+Experience Level: ${formData.experience}
+Tech Preferences: ${getTechPreferencesString(formData.techPreferences)}
 
-IMPORTANT: Adapt to the project type:
-- Python: use app/, tests/, requirements.txt
-- React Native: use src/, android/, ios/
-- Next.js: use App Router structure
-- REST API: use backend structure
+YOUR MISSION: Generate a COMPLETE, PRODUCTION-READY project architecture that is SPECIFIC to this exact project.
 
-Return JSON:
+FIRST, ANALYZE THE PROJECT:
+1. Is it web frontend, mobile, backend API, fullstack, or desktop?
+2. What tech stack makes sense based on the conversation and preferences?
+3. Does it need a database? What type (SQL vs NoSQL)?
+4. What are the main features discussed?
+
+GENERATE COMPREHENSIVE ARCHITECTURE:
+
+1. FILE STRUCTURE - Adapt to project type:
+   
+   For WEB FRONTEND (React/Vue/Next/etc):
+   - src/components/, pages/ or app/, hooks/, lib/, styles/
+   
+   For BACKEND API (Python/Node/Go):
+   - app/ or src/, routes/ or routers/, controllers/, models/, services/, middleware/
+   
+   For MOBILE (React Native/Flutter):
+   - src/screens/, components/, navigation/, services/, utils/
+   
+   For FULLSTACK:
+   - Separate frontend/ and backend/ structures
+   
+   For DESKTOP (Electron/Tauri):
+   - src/main/, renderer/, preload/, shared/
+
+2. DATABASE SCHEMA (if project needs database):
+   - Identify ALL tables/collections needed for the features discussed
+   - Define columns with proper types
+   - Define relationships (one-to-many, many-to-many)
+   - Make it SPECIFIC to this project!
+
+3. API ENDPOINTS (if applicable):
+   - List actual endpoints this project needs
+   - Format: METHOD /path - Purpose
+   - Include auth requirements
+
+4. AGENT DECISIONS - Spawn appropriate specialists:
+   - Security Agent (if auth, payments, sensitive data)
+   - Performance Agent (if high traffic, real-time)
+   - Cost Agent (always - budget optimization)
+   - Scalability Agent (if growth expected)
+   - Mobile Agent (if mobile app)
+   - Payment Agent (if e-commerce)
+   
+   Each agent gives SPECIFIC recommendations for THIS project!
+
+5. ARCHITECTURE RULES:
+   Rules MUST match the chosen tech stack:
+   - For Python: "API routes in app/routers/", "Pydantic models"
+   - For React Native: "Screens in src/screens/", "Navigation setup"
+   - For Next.js: "Server components by default", "API routes in app/api/"
+
+6. TECH STACK:
+   Recommend specific technologies based on conversation.
+
+7. TOOL RECOMMENDATIONS:
+   Explain WHY each AI tool fits THIS specific project.
+
+CRITICAL RULES:
+- DO NOT default to Next.js for everything!
+- If user wants Python API, give Python structure!
+- If user wants mobile app, give mobile structure!
+- Database schema must match actual features discussed!
+- Agent recommendations must be project-specific!
+
+OUTPUT FORMAT - Return ONLY this JSON structure (no markdown, no code blocks):
+
 {
-  "projectName": "string",
+  "projectName": "Project Name",
+  "projectType": "web|mobile|backend|fullstack|desktop",
+  "summary": "Brief 2-sentence summary of the architecture design",
+  
   "fileStructure": {
-    "name": "root-folder",
-    "type": "folder",
-    "children": [{"name": "src", "type": "folder", "children": [...]}]
+    "frontend": {
+      "name": "frontend",
+      "type": "folder",
+      "description": "Frontend built with X",
+      "children": [
+        {"name": "src", "type": "folder", "children": [
+          {"name": "components", "type": "folder", "description": "UI components", "fileCount": 12},
+          {"name": "pages", "type": "folder", "description": "Route pages"}
+        ]}
+      ]
+    },
+    "backend": {
+      "name": "backend",
+      "type": "folder",
+      "description": "Backend API built with X",
+      "children": [
+        {"name": "app", "type": "folder", "children": [
+          {"name": "routers", "type": "folder", "description": "API routes"},
+          {"name": "models", "type": "folder", "description": "Data models"}
+        ]}
+      ]
+    }
   },
+  
+  "database": {
+    "required": true,
+    "type": "PostgreSQL",
+    "description": "Relational database for X",
+    "tables": [
+      {
+        "name": "users",
+        "columns": [
+          {"name": "id", "type": "UUID", "primaryKey": true},
+          {"name": "email", "type": "VARCHAR(255)", "unique": true},
+          {"name": "created_at", "type": "TIMESTAMP"}
+        ]
+      }
+    ],
+    "relationships": [
+      {"from": "orders", "to": "users", "type": "many-to-one", "foreignKey": "user_id"}
+    ]
+  },
+  
+  "apiEndpoints": [
+    {"method": "GET", "path": "/api/users", "purpose": "List all users", "auth": true},
+    {"method": "POST", "path": "/api/auth/login", "purpose": "User login", "auth": false}
+  ],
+  
   "agentDecisions": [
-    {"id": "security", "icon": "🛡️", "name": "Security Agent", "summary": ["point1", "point2"], "details": [{"title": "Auth", "items": ["item1"]}]}
+    {
+      "id": "security",
+      "name": "Security Agent",
+      "icon": "🔒",
+      "summary": ["JWT authentication", "Rate limiting", "HTTPS only"],
+      "details": [{"title": "Auth Strategy", "items": ["JWT in httpOnly cookies", "Refresh token rotation"]}],
+      "reasoning": "For apps with user accounts, robust auth is critical.",
+      "estimate": null
+    },
+    {
+      "id": "cost",
+      "name": "Cost Agent",
+      "icon": "💰",
+      "summary": ["Start with free tier", "Scale as needed"],
+      "reasoning": "Minimize initial costs for small team.",
+      "estimate": "$0-25/month initially"
+    }
   ],
+  
   "architectureRules": [
-    {"category": "Code Structure", "color": "bg-primary/10", "rules": ["rule1", "rule2"]}
+    {
+      "category": "Component Organization",
+      "color": "bg-primary",
+      "rules": ["UI components in /components/ui/", "Max 200 lines per file"]
+    },
+    {
+      "category": "API Design",
+      "color": "bg-emerald-500",
+      "rules": ["RESTful endpoints", "Input validation with Zod/Pydantic"]
+    }
   ],
-  "techStack": {"frontend": "string", "backend": "string", "database": "string", "deployment": "string"},
-  "toolRecommendations": [{"id": "lovable", "name": "Lovable", "icon": "💜", "purpose": "UI development", "reason": "Fast prototyping"}]
+  
+  "techStack": {
+    "frontend": "Next.js 14 with TypeScript",
+    "backend": "Python FastAPI",
+    "database": "PostgreSQL",
+    "authentication": "JWT with NextAuth.js",
+    "deployment": "Vercel + Railway",
+    "caching": "Redis (at scale)"
+  },
+  
+  "toolRecommendations": [
+    {"id": "lovable", "name": "Lovable", "icon": "🎨", "purpose": "UI development", "reason": "Fast UI prototyping for your components."},
+    {"id": "cursor", "name": "Cursor AI", "icon": "💻", "purpose": "Backend logic", "reason": "Complex business logic implementation."}
+  ],
+  
+  "tradeoffResolution": {
+    "conflict": "Security vs Speed",
+    "decision": "Modular Monolith",
+    "reasoning": "Easier for your team size, can split later"
+  }
 }
 
-Return ONLY the JSON.`;
+IMPORTANT:
+- Return ONLY valid JSON, no markdown formatting
+- Ensure all JSON is properly escaped
+- fileStructure.frontend and fileStructure.backend can be null if not applicable
+- database can have required: false if no database needed
+- Make everything SPECIFIC to the project discussed!`;
         break;
+      }
 
-      case "chat_response":
+      case "chat_response": {
         const historyText = conversationHistory?.map((msg: ChatMessage) => 
           `${msg.role === 'bot' ? 'Bob' : 'User'}: ${msg.content}`
         ).join('\n') || '';
@@ -181,10 +339,13 @@ User says: ${userMessage}
 
 Respond naturally and helpfully. Keep responses concise (2-4 sentences).`;
         break;
+      }
 
       default:
         throw new Error(`Unknown action: ${action}`);
     }
+
+    console.log(`Processing action: ${action}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -222,6 +383,8 @@ Respond naturally and helpfully. Keep responses concise (2-4 sentences).`;
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
+
+    console.log(`Action ${action} completed successfully`);
 
     return new Response(JSON.stringify({ content }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

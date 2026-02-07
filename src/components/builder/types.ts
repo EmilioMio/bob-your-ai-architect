@@ -38,17 +38,55 @@ export interface ArchitectureFile {
   fileCount?: number;
 }
 
+export interface DatabaseColumn {
+  name: string;
+  type: string;
+  primaryKey?: boolean;
+  unique?: boolean;
+  foreignKey?: string;
+  nullable?: boolean;
+}
+
+export interface DatabaseTable {
+  name: string;
+  columns: DatabaseColumn[];
+  description?: string;
+}
+
+export interface DatabaseRelationship {
+  from: string;
+  to: string;
+  type: 'one-to-one' | 'one-to-many' | 'many-to-one' | 'many-to-many';
+  foreignKey: string;
+}
+
+export interface DatabaseSchema {
+  required: boolean;
+  type: string;
+  description: string;
+  tables: DatabaseTable[];
+  relationships: DatabaseRelationship[];
+}
+
+export interface ApiEndpoint {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  path: string;
+  purpose: string;
+  auth: boolean;
+}
+
 export interface AgentDecision {
-  agentId: string;
-  agentName: string;
-  agentIcon: string;
-  title: string;
+  id: string;
+  name: string;
+  icon: string;
   summary: string[];
   details?: {
     title: string;
     items: string[];
     files?: string[];
   }[];
+  reasoning?: string;
+  estimate?: string | null;
 }
 
 export interface ArchitectureRule {
@@ -64,7 +102,41 @@ export interface ToolRecommendation {
   icon: string;
   purpose: string;
   reason: string;
-  action: string;
+  action?: string;
+}
+
+export interface TechStack {
+  frontend?: string;
+  backend?: string;
+  database?: string;
+  authentication?: string;
+  deployment?: string;
+  caching?: string;
+  storage?: string;
+}
+
+export interface TradeoffResolution {
+  conflict: string;
+  decision: string;
+  reasoning: string;
+}
+
+export interface GeneratedArchitecture {
+  projectName: string;
+  projectType: 'web' | 'mobile' | 'backend' | 'fullstack' | 'desktop';
+  summary: string;
+  fileStructure: {
+    frontend?: ArchitectureFile;
+    backend?: ArchitectureFile;
+    mobile?: ArchitectureFile;
+  };
+  database?: DatabaseSchema;
+  apiEndpoints?: ApiEndpoint[];
+  agentDecisions: AgentDecision[];
+  architectureRules: ArchitectureRule[];
+  techStack: TechStack;
+  toolRecommendations: ToolRecommendation[];
+  tradeoffResolution?: TradeoffResolution;
 }
 
 export type BuilderStep = 'input' | 'analyzing' | 'chat' | 'architecture';
