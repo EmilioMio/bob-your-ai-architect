@@ -253,7 +253,7 @@ function MobileConnectingLines() {
 
 export function BackendFlowDiagram() {
   return (
-    <section className="py-24 md:py-32 bg-gradient-to-b from-background to-muted/20 overflow-hidden">
+    <section className="py-24 md:py-32 bg-background overflow-hidden">
       <div className="section-container">
         <motion.div
           className="text-center mb-16"
