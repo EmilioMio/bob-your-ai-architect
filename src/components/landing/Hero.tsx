@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight, Upload } from 'lucide-react';
 import { AnimatedBackground } from './AnimatedBackground';
 export function Hero() {
   const scrollToDemo = () => {
@@ -7,8 +7,8 @@ export function Hero() {
       behavior: 'smooth'
     });
   };
-  const scrollToHowItWorks = () => {
-    document.getElementById('how-it-works')?.scrollIntoView({
+  const scrollToUpload = () => {
+    document.getElementById('flow-diagram')?.scrollIntoView({
       behavior: 'smooth'
     });
   };
@@ -83,9 +83,9 @@ export function Hero() {
               Start Building
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
             </button>
-            <button onClick={scrollToHowItWorks} className="btn-ghost group">
-              <Play className="mr-2 h-4 w-4" />
-              See How It Works
+            <button onClick={scrollToUpload} className="btn-ghost group">
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Project
             </button>
           </motion.div>
         </div>
