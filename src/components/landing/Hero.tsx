@@ -83,8 +83,8 @@ export function Hero() {
               delay: 0.3,
             }}
           >
-            AI code architect that learns your needs, generates project structures, and keeps your codebase
-            consistent—from first commit to production.
+            Your AI code Architecture Team that learns your needs, generates project structures, and keeps your codebase
+            consistent from the first commit to production.
           </motion.p>
 
           <motion.div
