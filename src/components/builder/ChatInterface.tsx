@@ -2,206 +2,131 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Send, ArrowRight } from 'lucide-react';
 import { ChatMessage, ProjectFormData, Agent } from './types';
+import { 
+  generateGreeting, 
+  generateQuestions, 
+  acknowledgeResponse, 
+  getChatResponse,
+  GeneratedQuestion 
+} from '@/lib/bob-ai';
+import { toast } from '@/hooks/use-toast';
 
 interface ChatInterfaceProps {
   formData: ProjectFormData;
   agents: Agent[];
-  onComplete: () => void;
+  onComplete: (conversationHistory: ChatMessage[]) => void;
 }
-
-// Smart response generator based on context
-const generateBotResponse = (
-  userMessage: string,
-  formData: ProjectFormData,
-  conversationHistory: ChatMessage[],
-  questionIndex: number
-): { content: string; suggestions?: string[]; agentConsulting?: string } => {
-  const project = formData.project.toLowerCase();
-  const message = userMessage.toLowerCase();
-  const teamSize = formData.teamSize;
-  const timeline = formData.timeline.replace('-', ' to ');
-  
-  // Determine context-aware response based on question index
-  if (questionIndex === 0) {
-    // First user response - about authentication
-    if (message.includes('oauth') || message.includes('google') || message.includes('github')) {
-      return {
-        content: `Perfect! OAuth is a solid choice for a ${teamSize} team. My Security Agent will configure NextAuth.js with Google and GitHub providers.\n\nNow, my Performance Agent is asking about scale: How many users do you expect in the first 6 months?`,
-        suggestions: ['Under 100', '100-1,000', '1,000-10,000', '10,000+'],
-        agentConsulting: 'Performance Agent',
-      };
-    } else if (message.includes('role') || message.includes('admin') || message.includes('permission')) {
-      return {
-        content: `Role-based access control noted. ✓ My Security Agent will implement RBAC with customizable permission levels.\n\nMy Performance Agent needs to know: How many users do you expect in the first 6 months?`,
-        suggestions: ['Under 100', '100-1,000', '1,000-10,000', '10,000+'],
-        agentConsulting: 'Performance Agent',
-      };
-    } else if (message.includes('no auth') || message.includes('not needed')) {
-      return {
-        content: `No authentication needed - that simplifies things! We'll skip the auth layer for now.\n\nNext question from my Performance Agent: What's your expected traffic level in the first 6 months?`,
-        suggestions: ['Under 100 users', '100-1,000 users', '1,000+ users'],
-        agentConsulting: 'Performance Agent',
-      };
-    } else {
-      return {
-        content: `Got it - "${userMessage}". I'll factor that into the security architecture.\n\nMy Performance Agent is asking: How many users do you expect in the first 6 months?`,
-        suggestions: ['Under 100', '100-1,000', '1,000-10,000', '10,000+'],
-        agentConsulting: 'Performance Agent',
-      };
-    }
-  } else if (questionIndex === 1) {
-    // Second response - about scale/users
-    let scaleResponse = '';
-    if (message.includes('100') && !message.includes('1000') && !message.includes('10000')) {
-      scaleResponse = 'Under 100 users - perfect for an MVP! A simple PostgreSQL setup will work great.';
-    } else if (message.includes('1000') && !message.includes('10000')) {
-      scaleResponse = '100-1,000 users - good scale! PostgreSQL will handle that easily with proper indexing.';
-    } else if (message.includes('10000') || message.includes('10,000')) {
-      scaleResponse = '10,000+ users - impressive scale! My Performance Agent recommends Redis caching from day one.';
-    } else {
-      scaleResponse = `"${userMessage}" - noted! I'll optimize the database architecture accordingly.`;
-    }
-    
-    const hasPayments = project.includes('payment') || project.includes('stripe') || project.includes('subscription');
-    
-    if (hasPayments) {
-      return {
-        content: `${scaleResponse}\n\nSince you mentioned payments, my Payment Agent needs to know: Will you use Stripe, or do you have a different payment provider in mind?`,
-        suggestions: ['Stripe', 'PayPal', 'Other provider', 'Decide later'],
-        agentConsulting: 'Payment Agent',
-      };
-    } else {
-      return {
-        content: `${scaleResponse}\n\nLast question from my Cost Agent: Do you need real-time updates or is refresh-on-demand acceptable?`,
-        suggestions: ['Real-time updates', 'Refresh on demand', 'Hybrid approach'],
-        agentConsulting: 'Cost Agent',
-      };
-    }
-  } else if (questionIndex === 2) {
-    // Third response - about payments or real-time
-    if (message.includes('stripe')) {
-      return {
-        content: `Stripe it is! ✓ Excellent choice for ${timeline} timeline. My Payment Agent will set up Stripe Checkout with webhooks for subscription management.\n\nI have everything I need. Based on your ${formData.experience} experience level, I'm designing an architecture that balances best practices with pragmatic delivery.\n\nLet me show you what my team has designed...`,
-      };
-    } else if (message.includes('real-time') || message.includes('realtime')) {
-      return {
-        content: `Real-time updates - great UX choice! I'll configure WebSockets with proper reconnection handling and fallback polling.\n\nExcellent! I have everything I need. Based on your ${formData.experience} experience level and ${timeline} timeline, I'm designing an architecture optimized for your ${teamSize} team.\n\nLet me show you what my team has designed...`,
-      };
-    } else if (message.includes('refresh') || message.includes('demand')) {
-      return {
-        content: `Refresh on demand - simpler and more cost-effective! This is perfect for your timeline.\n\nI have everything I need. My team has designed an architecture that matches your ${formData.experience} level and ${teamSize} team size.\n\nLet me show you the results...`,
-      };
-    } else if (message.includes('hybrid')) {
-      return {
-        content: `Hybrid approach - smart choice! Real-time for critical updates, polling for less urgent data.\n\nPerfect! I have all the information needed. Let me show you what my team has designed for your ${timeline} project...`,
-      };
-    } else {
-      return {
-        content: `"${userMessage}" - noted and factored into the design!\n\nExcellent! I have everything I need. Based on your requirements, I'm finalizing an architecture optimized for your ${teamSize} team.\n\nLet me show you the results...`,
-      };
-    }
-  }
-  
-  // Fallback for any additional messages
-  return {
-    content: `Thanks for that additional context! I've incorporated "${userMessage}" into the architecture design.\n\nI believe I have enough information now. Let me show you what my team has designed...`,
-  };
-};
-
-// Initial greeting based on project type
-const getInitialMessages = (formData: ProjectFormData): Omit<ChatMessage, 'id' | 'timestamp'>[] => {
-  const project = formData.project.toLowerCase();
-  const hasAuth = project.includes('auth') || project.includes('login') || project.includes('user');
-  const hasPayments = project.includes('payment') || project.includes('subscription');
-  const hasAnalytics = project.includes('analytics') || project.includes('dashboard');
-  
-  let questionContent = '';
-  let suggestions: string[] = [];
-  
-  if (hasAuth) {
-    questionContent = "My Security Agent noticed you'll need user authentication. Will users have different permission levels (admin, viewer, etc.) or is everyone equal?";
-    suggestions = ['Yes, role-based access', 'No, everyone equal', 'Not sure yet'];
-  } else if (hasPayments) {
-    questionContent = "My Payment Agent sees this involves transactions. What payment provider do you prefer?";
-    suggestions = ['Stripe', 'PayPal', 'Multiple providers', 'Decide later'];
-  } else if (hasAnalytics) {
-    questionContent = "For your analytics dashboard, will you need real-time data updates or is periodic refresh acceptable?";
-    suggestions = ['Real-time updates', 'Refresh on demand', 'Hybrid approach'];
-  } else {
-    questionContent = "Will your application need user authentication and accounts?";
-    suggestions = ['Yes, with OAuth', 'Email/password only', 'No auth needed'];
-  }
-  
-  return [
-    {
-      role: 'bot',
-      content: `Great! I understand you're building "${formData.project}". My team has analyzed your requirements for a ${formData.teamSize} team with a ${formData.timeline.replace('-', ' to ')} timeline.\n\nLet me ask a few questions to nail down the architecture.`,
-    },
-    {
-      role: 'bot',
-      content: questionContent,
-      suggestions,
-      agentConsulting: hasAuth ? 'Security Agent' : hasPayments ? 'Payment Agent' : hasAnalytics ? 'Performance Agent' : undefined,
-    },
-  ];
-};
 
 export function ChatInterface({ formData, agents, onComplete }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
   const [consultingAgent, setConsultingAgent] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [showComplete, setShowComplete] = useState(false);
-  const [userResponseCount, setUserResponseCount] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Fixed scroll - only scrolls the messages container, not the page
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
-  // Initialize conversation
+  // Initialize conversation with AI
   useEffect(() => {
     if (isInitialized) return;
     setIsInitialized(true);
     
-    const initialMessages = getInitialMessages(formData);
-    
-    // Add first message
-    setIsTyping(true);
-    setTimeout(() => {
-      setMessages([{
-        ...initialMessages[0],
-        id: `msg-${Date.now()}`,
-        timestamp: new Date(),
-      }]);
-      setIsTyping(false);
+    const initializeConversation = async () => {
+      setIsTyping(true);
       
-      // Add second message with question
-      setTimeout(() => {
-        setIsTyping(true);
-        if (initialMessages[1].agentConsulting) {
-          setConsultingAgent(initialMessages[1].agentConsulting);
-        }
+      try {
+        // Generate AI greeting
+        const greeting = await generateGreeting(formData);
         
+        const greetingMessage: ChatMessage = {
+          id: `msg-${Date.now()}`,
+          role: 'bot',
+          content: greeting,
+          timestamp: new Date(),
+        };
+        
+        setMessages([greetingMessage]);
+        setIsTyping(false);
+        
+        // Generate contextual questions
+        setIsTyping(true);
+        setConsultingAgent('Security Agent');
+        
+        const generatedQuestions = await generateQuestions(formData);
+        setQuestions(generatedQuestions);
+        
+        // Ask first question
         setTimeout(() => {
-          setMessages(prev => [...prev, {
-            ...initialMessages[1],
-            id: `msg-${Date.now()}`,
-            timestamp: new Date(),
-          }]);
+          if (generatedQuestions.length > 0) {
+            const firstQuestion: ChatMessage = {
+              id: `msg-${Date.now()}-q`,
+              role: 'bot',
+              content: generatedQuestions[0].question,
+              suggestions: generatedQuestions[0].suggestions,
+              agentConsulting: 'Security Agent',
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, firstQuestion]);
+          }
           setIsTyping(false);
           setConsultingAgent(null);
-        }, 1500);
-      }, 800);
-    }, 1000);
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Failed to initialize:', error);
+        toast({
+          title: "Connection issue",
+          description: "Using fallback responses. AI features may be limited.",
+          variant: "destructive",
+        });
+        
+        // Fallback greeting
+        const fallbackMessage: ChatMessage = {
+          id: `msg-${Date.now()}`,
+          role: 'bot',
+          content: `Let me help you design the architecture for your project. I'll ask a few questions to understand your needs better.`,
+          timestamp: new Date(),
+        };
+        setMessages([fallbackMessage]);
+        setIsTyping(false);
+        
+        // Set fallback questions
+        setQuestions([
+          { question: "What's the primary purpose of this application?", suggestions: ["Data management", "User interaction", "Automation", "Analytics"] },
+          { question: "How many users do you expect?", suggestions: ["Under 100", "100-1,000", "1,000-10,000", "10,000+"] },
+          { question: "What's your deployment target?", suggestions: ["Cloud (AWS/GCP/Azure)", "Vercel/Netlify", "On-premise", "Not sure yet"] }
+        ]);
+        
+        setTimeout(() => {
+          const firstQuestion: ChatMessage = {
+            id: `msg-${Date.now()}-q`,
+            role: 'bot',
+            content: "What's the primary purpose of this application?",
+            suggestions: ["Data management", "User interaction", "Automation", "Analytics"],
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, firstQuestion]);
+        }, 500);
+      }
+    };
+    
+    setTimeout(initializeConversation, 500);
   }, [formData, isInitialized]);
 
-  const sendMessage = useCallback((content: string) => {
+  const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isTyping) return;
     
     // Add user message
@@ -215,53 +140,108 @@ export function ChatInterface({ formData, agents, onComplete }: ChatInterfacePro
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     
-    // Check if we should end the conversation
-    const newResponseCount = userResponseCount + 1;
-    setUserResponseCount(newResponseCount);
+    const nextQuestionIndex = currentQuestionIndex + 1;
     
-    if (newResponseCount >= 3) {
-      // Final response then show complete button
+    // Check if we've completed all questions
+    if (nextQuestionIndex >= questions.length) {
+      // Final response
       setIsTyping(true);
       setConsultingAgent('All Agents');
       
-      setTimeout(() => {
-        const response = generateBotResponse(content, formData, messages, userResponseCount);
-        setMessages(prev => [...prev, {
-          id: `msg-${Date.now()}`,
-          role: 'bot',
-          content: response.content,
-          timestamp: new Date(),
-        }]);
-        setIsTyping(false);
-        setConsultingAgent(null);
-        
-        setTimeout(() => setShowComplete(true), 1500);
-      }, 2000);
-    } else {
-      // Generate contextual response
-      setIsTyping(true);
-      
-      setTimeout(() => {
-        const response = generateBotResponse(content, formData, messages, userResponseCount);
-        if (response.agentConsulting) {
-          setConsultingAgent(response.agentConsulting);
-        }
+      try {
+        const acknowledgment = await acknowledgeResponse(
+          formData,
+          questions[currentQuestionIndex]?.question || '',
+          content
+        );
         
         setTimeout(() => {
-          setMessages(prev => [...prev, {
+          const finalMessage: ChatMessage = {
             id: `msg-${Date.now()}`,
             role: 'bot',
-            content: response.content,
-            suggestions: response.suggestions,
-            agentConsulting: response.agentConsulting,
+            content: `${acknowledgment}\n\nExcellent! I have all the information I need. Let me show you what my team has designed...`,
             timestamp: new Date(),
-          }]);
+          };
+          setMessages(prev => [...prev, finalMessage]);
           setIsTyping(false);
           setConsultingAgent(null);
+          
+          setTimeout(() => setShowComplete(true), 1500);
         }, 1500);
-      }, 500);
+      } catch {
+        setTimeout(() => {
+          const finalMessage: ChatMessage = {
+            id: `msg-${Date.now()}`,
+            role: 'bot',
+            content: `Perfect! I have all the information I need. Let me show you what my team has designed...`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, finalMessage]);
+          setIsTyping(false);
+          setConsultingAgent(null);
+          
+          setTimeout(() => setShowComplete(true), 1500);
+        }, 1000);
+      }
+    } else {
+      // Generate acknowledgment and ask next question
+      setIsTyping(true);
+      const agentNames = ['Performance Agent', 'Cost Agent', 'Architecture Agent'];
+      setConsultingAgent(agentNames[nextQuestionIndex % agentNames.length]);
+      
+      try {
+        const acknowledgment = await acknowledgeResponse(
+          formData,
+          questions[currentQuestionIndex]?.question || '',
+          content
+        );
+        
+        setTimeout(() => {
+          // Add acknowledgment
+          const ackMessage: ChatMessage = {
+            id: `msg-${Date.now()}-ack`,
+            role: 'bot',
+            content: acknowledgment,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, ackMessage]);
+          
+          // Add next question
+          setTimeout(() => {
+            const nextQuestion = questions[nextQuestionIndex];
+            const questionMessage: ChatMessage = {
+              id: `msg-${Date.now()}-q`,
+              role: 'bot',
+              content: nextQuestion.question,
+              suggestions: nextQuestion.suggestions,
+              agentConsulting: agentNames[nextQuestionIndex % agentNames.length],
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, questionMessage]);
+            setCurrentQuestionIndex(nextQuestionIndex);
+            setIsTyping(false);
+            setConsultingAgent(null);
+          }, 800);
+        }, 1200);
+      } catch {
+        // Fallback
+        setTimeout(() => {
+          const nextQuestion = questions[nextQuestionIndex];
+          const fallbackMessage: ChatMessage = {
+            id: `msg-${Date.now()}`,
+            role: 'bot',
+            content: `Got it! ${nextQuestion.question}`,
+            suggestions: nextQuestion.suggestions,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, fallbackMessage]);
+          setCurrentQuestionIndex(nextQuestionIndex);
+          setIsTyping(false);
+          setConsultingAgent(null);
+        }, 800);
+      }
     }
-  }, [formData, messages, userResponseCount, isTyping]);
+  }, [formData, messages, questions, currentQuestionIndex, isTyping]);
 
   const handleSuggestionClick = (suggestion: string) => {
     sendMessage(suggestion);
@@ -276,6 +256,10 @@ export function ChatInterface({ formData, agents, onComplete }: ChatInterfacePro
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  };
+
+  const handleComplete = () => {
+    onComplete(messages);
   };
 
   return (
@@ -296,8 +280,11 @@ export function ChatInterface({ formData, agents, onComplete }: ChatInterfacePro
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-2">
+      {/* Messages - Fixed scroll container */}
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto py-4 space-y-4 pr-2"
+      >
         <AnimatePresence mode="popLayout">
           {messages.map((msg) => (
             <motion.div
@@ -379,8 +366,6 @@ export function ChatInterface({ formData, agents, onComplete }: ChatInterfacePro
             </div>
           </motion.div>
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Complete Button or Input */}
@@ -391,7 +376,7 @@ export function ChatInterface({ formData, agents, onComplete }: ChatInterfacePro
               key="complete"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              onClick={onComplete}
+              onClick={handleComplete}
               className="w-full btn-primary group"
             >
               <span>View Architecture</span>
@@ -407,18 +392,18 @@ export function ChatInterface({ formData, agents, onComplete }: ChatInterfacePro
               <input
                 type="text"
                 placeholder="Type a message..."
-                className="flex-1 px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                className="flex-1 px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isTyping}
               />
               <button
-                className="px-4 py-3 rounded-xl bg-primary text-primary-foreground disabled:opacity-50 transition-opacity hover:bg-primary/90"
-                disabled={isTyping || !inputValue.trim()}
                 onClick={() => sendMessage(inputValue)}
+                disabled={isTyping || !inputValue.trim()}
+                className="px-4 py-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-5 h-5" />
               </button>
             </motion.div>
           )}

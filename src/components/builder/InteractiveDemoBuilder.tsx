@@ -5,12 +5,13 @@ import { ProjectInputForm } from './ProjectInputForm';
 import { AgentSpawning } from './AgentSpawning';
 import { ChatInterface } from './ChatInterface';
 import { ArchitectureProposal } from './ArchitectureProposal';
-import { BuilderStep, ProjectFormData, Agent } from './types';
+import { BuilderStep, ProjectFormData, Agent, ChatMessage } from './types';
 
 export function InteractiveDemoBuilder() {
   const [step, setStep] = useState<BuilderStep>('input');
   const [formData, setFormData] = useState<ProjectFormData | null>(null);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [conversationHistory, setConversationHistory] = useState<ChatMessage[]>([]);
 
   const stepLabels: Record<BuilderStep, string> = {
     input: 'Project Details',
@@ -32,7 +33,8 @@ export function InteractiveDemoBuilder() {
     setStep('chat');
   };
 
-  const handleChatComplete = () => {
+  const handleChatComplete = (messages: ChatMessage[]) => {
+    setConversationHistory(messages);
     setStep('architecture');
   };
 
@@ -131,6 +133,7 @@ export function InteractiveDemoBuilder() {
                   key="architecture"
                   formData={formData}
                   agents={agents}
+                  conversationHistory={conversationHistory}
                   onBack={handleBackToChat}
                 />
               )}

@@ -7,11 +7,12 @@ import {
 } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { ProjectFormData, Agent } from './types';
+import { ProjectFormData, Agent, ChatMessage } from './types';
 
 interface ArchitectureProposalProps {
   formData: ProjectFormData;
   agents: Agent[];
+  conversationHistory: ChatMessage[];
   onBack: () => void;
 }
 
