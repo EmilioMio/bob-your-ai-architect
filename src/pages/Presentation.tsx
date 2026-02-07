@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Home, Monitor, Brain, Shield, Zap, Coins, Database, Rocket, FolderTree, FileCode, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, Monitor, Brain, Shield, Zap, Coins, Database, Rocket, FolderTree, FileCode, Check, Clock, TrendingUp, Users, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Slide {
@@ -322,138 +322,122 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 5: Visualize the Flow (Tree diagram like website)
+  // Slide 5: Statistics & Benefits
   {
     id: 5,
-    title: 'Visualize the Flow',
-    subtitle: 'How Bob\'s architecture engine works',
-    content: (
-      <div className="max-w-5xl mx-auto">
-        {/* Tree structure visualization */}
-        <div className="flex items-center justify-center gap-2 md:gap-4">
-          {/* Level 1: Input */}
+    title: 'Why Bob?',
+    subtitle: 'The numbers speak for themselves',
+    content: (() => {
+      // ========== EASILY EDITABLE STATISTICS ==========
+      const stats = {
+        timeSaved: {
+          value: '40+',
+          unit: 'hours',
+          description: 'saved per project on architecture planning',
+          icon: Clock,
+          color: 'text-primary',
+          bgColor: 'bg-primary/10',
+        },
+        productivity: {
+          value: '3x',
+          unit: 'faster',
+          description: 'development kickoff vs manual setup',
+          icon: TrendingUp,
+          color: 'text-accent',
+          bgColor: 'bg-accent/10',
+        },
+        teamEfficiency: {
+          value: '85%',
+          unit: '',
+          description: 'reduction in architectural debates',
+          icon: Users,
+          color: 'text-purple-500',
+          bgColor: 'bg-purple-500/10',
+        },
+        costSavings: {
+          value: '$15k',
+          unit: '+',
+          description: 'saved on refactoring costs annually',
+          icon: DollarSign,
+          color: 'text-emerald-500',
+          bgColor: 'bg-emerald-500/10',
+        },
+      };
+
+      const benefits = [
+        { text: 'Consistent architecture across all projects', highlight: true },
+        { text: 'Best practices enforced automatically', highlight: false },
+        { text: 'Reduced onboarding time for new developers', highlight: true },
+        { text: 'Fewer bugs from inconsistent patterns', highlight: false },
+        { text: 'Clear documentation generated instantly', highlight: true },
+      ];
+      // ================================================
+
+      return (
+        <div className="max-w-5xl mx-auto">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10">
+            {Object.entries(stats).map(([key, stat], idx) => (
+              <motion.div
+                key={key}
+                className="bg-card rounded-2xl border border-border p-5 text-center shadow-lg"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + idx * 0.1 }}
+              >
+                <div className={`w-12 h-12 rounded-xl ${stat.bgColor} ${stat.color} flex items-center justify-center mx-auto mb-3`}>
+                  <stat.icon className="w-6 h-6" />
+                </div>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className={`text-3xl md:text-4xl font-bold ${stat.color}`}>{stat.value}</span>
+                  <span className="text-lg text-muted-foreground">{stat.unit}</span>
+                </div>
+                <p className="text-xs md:text-sm text-muted-foreground mt-2">{stat.description}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Benefits List */}
           <motion.div
-            className="flex flex-col items-center"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
+            className="bg-card/50 rounded-2xl border border-border p-6 md:p-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
           >
-            <div className="rounded-2xl bg-card border-2 border-primary/40 p-4 w-28 text-center shadow-lg">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2">
-                <Monitor className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-foreground text-sm">Input</h3>
-              <p className="text-xs text-muted-foreground">Describe project</p>
+            <h3 className="text-lg font-semibold text-foreground mb-4 text-center">Key Benefits</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {benefits.map((benefit, idx) => (
+                <motion.div
+                  key={idx}
+                  className={`flex items-center gap-3 p-3 rounded-xl ${benefit.highlight ? 'bg-primary/5 border border-primary/20' : 'bg-muted/30'}`}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 + idx * 0.08 }}
+                >
+                  <Check className={`w-5 h-5 flex-shrink-0 ${benefit.highlight ? 'text-primary' : 'text-accent'}`} />
+                  <span className="text-sm text-foreground">{benefit.text}</span>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
 
-          {/* Connector */}
+          {/* CTA */}
           <motion.div 
-            className="w-8 h-0.5 bg-gradient-to-r from-primary/50 to-purple-500/50"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.2 }}
-          />
-
-          {/* Level 2: Agents */}
-          <motion.div
-            className="flex flex-col gap-2"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
+            className="mt-10 flex flex-wrap justify-center gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1 }}
           >
-            {[
-              { icon: Shield, title: 'Security', color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/40' },
-              { icon: Zap, title: 'Performance', color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/40' },
-              { icon: Coins, title: 'Cost', color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/40' },
-            ].map((agent, idx) => (
-              <motion.div
-                key={idx}
-                className={`rounded-xl ${agent.bg} border ${agent.border} p-2 w-24 text-center`}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + idx * 0.1 }}
-              >
-                <agent.icon className={`w-5 h-5 ${agent.color} mx-auto mb-1`} />
-                <p className="text-xs font-medium text-foreground">{agent.title}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Connector */}
-          <motion.div 
-            className="w-8 h-0.5 bg-gradient-to-r from-amber-500/50 to-accent/50"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.6 }}
-          />
-
-          {/* Level 3: Synthesis */}
-          <motion.div
-            className="flex flex-col items-center"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.7 }}
-          >
-            <div className="rounded-2xl bg-card border-2 border-accent/40 p-4 w-28 text-center shadow-lg">
-              <div className="w-10 h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center mx-auto mb-2">
-                <Brain className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-foreground text-sm">Analyze</h3>
-              <p className="text-xs text-muted-foreground">AI synthesis</p>
-            </div>
-          </motion.div>
-
-          {/* Connector */}
-          <motion.div 
-            className="w-8 h-0.5 bg-gradient-to-r from-accent/50 to-rose-500/50"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.8 }}
-          />
-
-          {/* Level 4: Outputs */}
-          <motion.div
-            className="flex flex-col gap-2"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.9 }}
-          >
-            {[
-              { icon: Database, title: 'Design', desc: 'Architecture', color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/40' },
-              { icon: Rocket, title: 'Deploy', desc: 'Export & build', color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/40' },
-            ].map((output, idx) => (
-              <motion.div
-                key={idx}
-                className={`rounded-xl ${output.bg} border ${output.border} p-3 w-28 text-center`}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1 + idx * 0.1 }}
-              >
-                <output.icon className={`w-5 h-5 ${output.color} mx-auto mb-1`} />
-                <p className="text-xs font-medium text-foreground">{output.title}</p>
-                <p className="text-[10px] text-muted-foreground">{output.desc}</p>
-              </motion.div>
-            ))}
+            <a href="/" className="btn-primary">
+              Try Bob Now
+            </a>
+            <button className="btn-ghost">
+              View on GitHub
+            </button>
           </motion.div>
         </div>
-
-        {/* CTA */}
-        <motion.div 
-          className="mt-12 flex flex-wrap justify-center gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.3 }}
-        >
-          <a href="/" className="btn-primary">
-            Try Bob Now
-          </a>
-          <button className="btn-ghost">
-            View on GitHub
-          </button>
-        </motion.div>
-      </div>
-    ),
+      );
+    })(),
   },
 ];
 
