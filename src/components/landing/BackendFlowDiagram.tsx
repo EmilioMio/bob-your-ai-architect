@@ -1,9 +1,6 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import mermaid from "mermaid";
-import { useEffect, useRef } from "react";
-import mermaid from "mermaid";
-import { motion } from "framer-motion";
 
 const flowchartDefinition = `
 graph TD
@@ -165,7 +162,7 @@ export function BackendFlowDiagram() {
         </motion.div>
       </div>
 
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .node rect, .node circle, .node polygon {
           fill: #1e293b !important;
           stroke: #3b82f6 !important;
@@ -188,7 +185,7 @@ export function BackendFlowDiagram() {
             font-weight: 800 !important;
             letter-spacing: 0.1em;
         }
-      `}</style>
+      `}} />
     </section>
   );
 }
