@@ -112,56 +112,121 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 3: See Bob in Action
+  // Slide 3: See Bob in Action (VS Code)
   {
     id: 3,
     title: 'See Bob in Action',
-    subtitle: 'Multi-agent analysis at work',
+    subtitle: 'Live enforcement in VS Code',
     content: (
       <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { icon: Shield, title: 'Security Agent', desc: 'Analyzing auth patterns & permissions', color: 'text-purple-500', bg: 'bg-purple-500/10', borderColor: 'border-purple-500/40' },
-            { icon: Zap, title: 'Performance Agent', desc: 'Optimizing for speed & scalability', color: 'text-amber-500', bg: 'bg-amber-500/10', borderColor: 'border-amber-500/40' },
-            { icon: Coins, title: 'Cost Agent', desc: 'Balancing features with budget', color: 'text-emerald-500', bg: 'bg-emerald-500/10', borderColor: 'border-emerald-500/40' },
-          ].map((agent, idx) => (
-            <motion.div
-              key={idx}
-              className={`${agent.bg} rounded-2xl p-6 border-2 ${agent.borderColor}`}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 + idx * 0.15, type: 'spring' }}
-            >
-              <agent.icon className={`w-12 h-12 ${agent.color} mb-4`} />
-              <h3 className="font-semibold text-foreground text-lg mb-2">{agent.title}</h3>
-              <p className="text-sm text-muted-foreground">{agent.desc}</p>
+        <motion.div 
+          className="bg-card rounded-2xl border border-border overflow-hidden shadow-2xl"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          {/* VS Code title bar */}
+          <div className="bg-[hsl(var(--code-bg))] px-4 py-3 flex items-center gap-2 border-b border-[hsl(var(--code-comment))]/20">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-destructive" />
+              <div className="w-3 h-3 rounded-full bg-warning" />
+              <div className="w-3 h-3 rounded-full bg-accent" />
+            </div>
+            <span className="text-[hsl(var(--code-comment))] text-sm ml-2">UserService.ts — my-saas-app</span>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-bold">B</div>
+              <span className="text-[hsl(var(--code-comment))] text-xs">Bob Active</span>
+            </div>
+          </div>
+          
+          {/* VS Code editor */}
+          <div className="bg-[hsl(var(--code-bg))] flex">
+            {/* Line numbers */}
+            <div className="py-4 px-3 text-right text-[hsl(var(--code-comment))] text-sm font-mono select-none border-r border-[hsl(var(--code-comment))]/10">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                <div key={n} className={n === 4 ? 'text-warning' : ''}>{n}</div>
+              ))}
+            </div>
+            
+            {/* Code content */}
+            <div className="flex-1 p-4">
+              <pre className="text-sm font-mono text-left">
+                <code>
+                  <span className="text-[hsl(var(--code-keyword))]">export class</span>
+                  <span className="text-[hsl(var(--code-function))]"> UserService</span>
+                  <span className="text-[hsl(var(--code-text))]"> {'{'}</span>
+                  {'\n'}
+                  <span className="text-[hsl(var(--code-keyword))]">  async</span>
+                  <span className="text-[hsl(var(--code-function))]"> fetchUsers</span>
+                  <span className="text-[hsl(var(--code-text))]">() {'{'}</span>
+                  {'\n'}
+                  <span className="text-[hsl(var(--code-comment))]">    {'// '}TODO: Add error handling</span>
+                  {'\n'}
+                  <motion.span 
+                    className="bg-warning/20 block -mx-4 px-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <span className="text-[hsl(var(--code-keyword))]">    const</span>
+                    <span className="text-[hsl(var(--code-text))]"> response = </span>
+                    <span className="text-[hsl(var(--code-keyword))]">await</span>
+                    <span className="text-[hsl(var(--code-function))]"> fetch</span>
+                    <span className="text-[hsl(var(--code-text))]">(</span>
+                    <span className="text-[hsl(var(--code-string))]">'/api/users'</span>
+                    <span className="text-[hsl(var(--code-text))]">);</span>
+                  </motion.span>
+                  <span className="text-[hsl(var(--code-keyword))]">    return</span>
+                  <span className="text-[hsl(var(--code-text))]"> response.</span>
+                  <span className="text-[hsl(var(--code-function))]">json</span>
+                  <span className="text-[hsl(var(--code-text))]">();</span>
+                  {'\n'}
+                  <span className="text-[hsl(var(--code-text))]">  {'}'}</span>
+                  {'\n'}
+                  <span className="text-[hsl(var(--code-text))]">{'}'}</span>
+                </code>
+              </pre>
+            </div>
+          </div>
+          
+          {/* Bob warning panel */}
+          <motion.div 
+            className="bg-warning/10 border-t border-warning/30 p-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <div className="flex items-start gap-3">
+              <span className="text-warning text-xl">⚠️</span>
+              <div className="flex-1 text-left">
+                <p className="text-warning font-semibold text-sm">Architectural Pattern Violation</p>
+                <p className="text-warning/80 text-xs mt-1">API calls should use the centralized apiClient from /lib/api — Rule: "All API calls through services layer"</p>
+              </div>
               <motion.div 
-                className="mt-4 h-2 bg-muted rounded-full overflow-hidden"
+                className="flex gap-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 + idx * 0.1 }}
+                transition={{ delay: 1.2 }}
               >
-                <motion.div
-                  className={`h-full ${agent.bg.replace('/10', '')}`}
-                  initial={{ width: 0 }}
-                  animate={{ width: '100%' }}
-                  transition={{ delay: 0.6 + idx * 0.15, duration: 1.5 }}
-                />
+                <button className="px-3 py-1.5 text-xs bg-warning text-warning-foreground rounded-lg font-medium">
+                  Auto-fix
+                </button>
+                <button className="px-3 py-1.5 text-xs bg-transparent border border-warning/50 text-warning rounded-lg">
+                  Ignore
+                </button>
               </motion.div>
-            </motion.div>
-          ))}
-        </div>
-        <motion.div 
-          className="mt-8 flex justify-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
-        >
-          <div className="inline-flex items-center gap-3 bg-accent/10 px-6 py-3 rounded-full border border-accent/30">
-            <Brain className="w-6 h-6 text-accent" />
-            <span className="text-accent font-semibold">AI Synthesis Complete</span>
-          </div>
+            </div>
+          </motion.div>
         </motion.div>
+        
+        <motion.p
+          className="mt-6 text-muted-foreground text-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.4 }}
+        >
+          Bob monitors your code in real-time and flags violations of your architectural rules
+        </motion.p>
       </div>
     ),
   },
