@@ -15,7 +15,24 @@ interface ProjectFormData {
   teamSize: string;
   timeline: string;
   experience: string;
-  techPreferences?: string[];
+  techPreferences?: {
+    frontend: string[];
+    backend: string[];
+    database: string[];
+    deployment: string[];
+  };
+}
+
+// Helper to flatten techPreferences object into a string
+function getTechPreferencesString(techPreferences?: ProjectFormData['techPreferences']): string {
+  if (!techPreferences) return 'None specified';
+  const all = [
+    ...techPreferences.frontend,
+    ...techPreferences.backend,
+    ...techPreferences.database,
+    ...techPreferences.deployment,
+  ].filter(Boolean);
+  return all.length > 0 ? all.join(', ') : 'None specified';
 }
 
 serve(async (req) => {
@@ -60,7 +77,7 @@ PROJECT: ${formData.project}
 Team size: ${formData.teamSize}
 Timeline: ${formData.timeline}
 Experience level: ${formData.experience}
-Tech preferences: ${formData.techPreferences?.join(', ') || 'None specified'}
+Tech preferences: ${getTechPreferencesString(formData.techPreferences)}
 
 Generate 3 highly relevant questions for THIS SPECIFIC PROJECT.
 Questions should be directly relevant (don't ask about payments for a calculator app).
@@ -117,7 +134,7 @@ PROJECT: ${formData.project}
 Team: ${formData.teamSize}
 Timeline: ${formData.timeline}
 Experience: ${formData.experience}
-Tech: ${formData.techPreferences?.join(', ') || 'None'}
+Tech: ${getTechPreferencesString(formData.techPreferences)}
 
 CONVERSATION:
 ${conversationText}
