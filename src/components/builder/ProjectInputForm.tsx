@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Info, Users, Calendar, Target, Laptop, Settings, Rocket } from 'lucide-react';
+import { ChevronDown, Info, Users, Calendar, Target, Laptop, Settings, Rocket, AlertCircle } from 'lucide-react';
 import { ProjectFormData } from './types';
+import { validateProject } from '@/lib/bob-ai';
 
 const teamSizeOptions = [
   { value: 'solo', label: 'Solo developer', icon: '👤' },
@@ -61,12 +62,14 @@ export function ProjectInputForm({ onSubmit }: ProjectInputFormProps) {
   });
   const [showTechOptions, setShowTechOptions] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    if (formData.project.length < 50) {
-      newErrors.project = 'Please describe your project in at least 50 characters';
+    if (formData.project.length < 20) {
+      newErrors.project = 'Please describe your project in at least 20 characters';
     }
     if (!formData.teamSize) {
       newErrors.teamSize = 'Please select team size';
@@ -82,8 +85,27 @@ export function ProjectInputForm({ onSubmit }: ProjectInputFormProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+    
+    setIsValidating(true);
+    setValidationMessage(null);
+    
+    try {
+      const validation = await validateProject(formData.project);
+      
+      if (!validation.valid) {
+        setValidationMessage(validation.message || "Please provide a clearer project description.");
+        setIsValidating(false);
+        return;
+      }
+      
+      setIsValidating(false);
+      onSubmit(formData);
+    } catch (error) {
+      console.error('Validation error:', error);
+      setIsValidating(false);
+      // Continue anyway on error
       onSubmit(formData);
     }
   };
@@ -174,15 +196,31 @@ export function ProjectInputForm({ onSubmit }: ProjectInputFormProps) {
             onChange={(e) => {
               setFormData(prev => ({ ...prev, project: e.target.value }));
               if (errors.project) setErrors(prev => ({ ...prev, project: '' }));
+              if (validationMessage) setValidationMessage(null);
             }}
           />
           <span className={`absolute bottom-3 right-3 text-xs ${
-            formData.project.length >= 50 ? 'text-primary' : 'text-muted-foreground'
+            formData.project.length >= 20 ? 'text-primary' : 'text-muted-foreground'
           }`}>
             {formData.project.length}/500
           </span>
         </div>
         {errors.project && <p className="text-xs text-destructive">{errors.project}</p>}
+        
+        {/* AI Validation Message */}
+        <AnimatePresence>
+          {validationMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex items-start gap-2 p-3 bg-warning/10 border border-warning/30 rounded-lg"
+            >
+              <AlertCircle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-warning">{validationMessage}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Dropdowns Grid */}
@@ -291,12 +329,26 @@ export function ProjectInputForm({ onSubmit }: ProjectInputFormProps) {
       {/* Submit Button */}
       <motion.button
         onClick={handleSubmit}
-        className="w-full btn-primary text-lg py-4 group"
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
+        disabled={isValidating}
+        className="w-full btn-primary text-lg py-4 group disabled:opacity-70 disabled:cursor-not-allowed"
+        whileHover={{ scale: isValidating ? 1 : 1.01 }}
+        whileTap={{ scale: isValidating ? 1 : 0.99 }}
       >
-        <Rocket className="w-5 h-5 mr-2" />
-        Start Building with Bob
+        {isValidating ? (
+          <>
+            <motion.div
+              className="w-5 h-5 mr-2 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
+            Validating...
+          </>
+        ) : (
+          <>
+            <Rocket className="w-5 h-5 mr-2" />
+            Start Building with Bob
+          </>
+        )}
       </motion.button>
     </motion.div>
   );
