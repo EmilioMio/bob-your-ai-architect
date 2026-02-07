@@ -1,7 +1,6 @@
 import { Hero } from '@/components/landing/Hero';
 import { InteractiveDemo } from '@/components/landing/InteractiveDemo';
 import { HowItWorks } from '@/components/landing/HowItWorks';
-import { VisualizeFlow } from '@/components/landing/VisualizeFlow';
 import { LiveEnforcement } from '@/components/landing/LiveEnforcement';
 import { Features } from '@/components/landing/Features';
 import { ArchitectureShowcase } from '@/components/landing/ArchitectureShowcase';
@@ -15,7 +14,6 @@ const Index = () => {
       <Hero />
       <InteractiveDemo />
       <HowItWorks />
-      <VisualizeFlow />
       <LiveEnforcement />
       <Features />
       <ArchitectureShowcase />
