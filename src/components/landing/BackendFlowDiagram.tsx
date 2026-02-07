@@ -1,5 +1,8 @@
-import { motion } from 'framer-motion';
-import { Monitor, Brain, Database, Rocket, Shield, Zap, Coins } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Monitor, Brain, Database, Rocket, Shield, Zap, Coins, Upload, Github, Loader2, X } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 const treeData = {
   root: {
@@ -75,9 +78,10 @@ interface NodeProps {
   node: typeof treeData.root;
   delay?: number;
   className?: string;
+  isActive?: boolean;
 }
 
-function TreeNode({ node, delay = 0, className = '' }: NodeProps) {
+function TreeNode({ node, delay = 0, className = '', isActive = false }: NodeProps) {
   const Icon = node.icon;
   return (
     <motion.div
@@ -88,10 +92,21 @@ function TreeNode({ node, delay = 0, className = '' }: NodeProps) {
       transition={{ duration: 0.4, delay }}
     >
       <div
-        className={`rounded-2xl bg-card/80 backdrop-blur-sm border-2 ${node.borderColor} p-4 w-32 lg:w-36 text-center shadow-lg`}
+        className={`rounded-2xl bg-card/80 backdrop-blur-sm border-2 ${node.borderColor} p-4 w-32 lg:w-36 text-center shadow-lg transition-all duration-300 ${
+          isActive ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-105' : ''
+        }`}
       >
         <div className={`w-10 h-10 rounded-xl ${node.iconBg} ${node.iconColor} flex items-center justify-center mx-auto mb-2`}>
-          <Icon className="w-5 h-5" />
+          {isActive ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            >
+              <Loader2 className="w-5 h-5" />
+            </motion.div>
+          ) : (
+            <Icon className="w-5 h-5" />
+          )}
         </div>
         <h3 className="font-semibold text-foreground text-sm mb-0.5">
           {node.title}
@@ -252,11 +267,77 @@ function MobileConnectingLines() {
 }
 
 export function BackendFlowDiagram() {
+  const [repoUrl, setRepoUrl] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const simulateAnalysis = () => {
+    setIsAnalyzing(true);
+    setUploadedFileName(null);
+    
+    // Animate through nodes sequentially
+    const nodeSequence = ['input', 'security', 'performance', 'cost', 'analyze', 'design', 'deploy'];
+    let currentIndex = 0;
+    
+    const animateNodes = () => {
+      if (currentIndex < nodeSequence.length) {
+        setActiveNodeId(nodeSequence[currentIndex]);
+        currentIndex++;
+        setTimeout(animateNodes, 600);
+      } else {
+        setActiveNodeId(null);
+        setIsAnalyzing(false);
+        toast({
+          title: "Analysis complete",
+          description: "Architecture recommendations are ready",
+        });
+      }
+    };
+    
+    animateNodes();
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setIsUploading(true);
+      setUploadedFileName(null);
+      
+      // Simulate file reading
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadedFileName(file.name);
+        toast({
+          title: "Project files loaded successfully",
+          description: `Loaded ${file.name}`,
+        });
+        
+        // Trigger the same analysis animation
+        simulateAnalysis();
+      }, 1500);
+    }
+    // Reset input value so the same file can be selected again
+    event.target.value = '';
+  };
+
+  const clearUploadedFile = () => {
+    setUploadedFileName(null);
+  };
+
+  const isNodeActive = (nodeId: string) => activeNodeId === nodeId;
+
   return (
     <section className="py-24 md:py-32 bg-background overflow-hidden">
       <div className="section-container">
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-8"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -270,6 +351,101 @@ export function BackendFlowDiagram() {
           </p>
         </motion.div>
 
+        {/* GitHub URL Input Section */}
+        <motion.div
+          className="max-w-2xl mx-auto mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <div className="card-elevated p-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* GitHub Input */}
+              <div className="relative flex-1">
+                <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="https://github.com/username/repo"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  value={repoUrl}
+                  onChange={(e) => setRepoUrl(e.target.value)}
+                  disabled={isAnalyzing || isUploading}
+                />
+              </div>
+              
+              {/* Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={simulateAnalysis}
+                  disabled={isAnalyzing || isUploading}
+                  className="btn-primary px-6 py-3 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    'Simulate'
+                  )}
+                </button>
+                
+                <button
+                  onClick={handleUploadClick}
+                  disabled={isAnalyzing || isUploading}
+                  className="relative inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-border bg-secondary text-secondary-foreground font-medium transition-all hover:bg-secondary/80 hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="hidden sm:inline">Reading Files...</span>
+                      <span className="sm:hidden">Reading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      <span className="hidden sm:inline">Upload Project</span>
+                      <span className="sm:hidden">Upload</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            {/* Uploaded file badge */}
+            <AnimatePresence>
+              {uploadedFileName && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mt-3 flex items-center gap-2"
+                >
+                  <Badge variant="secondary" className="flex items-center gap-1.5 px-3 py-1">
+                    <span className="text-xs">{uploadedFileName}</span>
+                    <button
+                      onClick={clearUploadedFile}
+                      className="ml-1 hover:text-destructive transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".zip"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+        </motion.div>
+
         {/* Desktop: Tree Structure */}
         <div className="hidden lg:block relative max-w-5xl mx-auto">
           <div className="relative h-[320px]">
@@ -277,25 +453,25 @@ export function BackendFlowDiagram() {
             
             {/* Level 1: Input */}
             <div className="absolute left-0 top-1/2 -translate-y-1/2" style={{ zIndex: 1 }}>
-              <TreeNode node={treeData.root} delay={0} />
+              <TreeNode node={treeData.root} delay={0} isActive={isNodeActive('input')} />
             </div>
             
             {/* Level 2: Agents */}
             <div className="absolute left-[280px] top-1/2 -translate-y-1/2 flex flex-col gap-3" style={{ zIndex: 1 }}>
               {treeData.agents.map((agent, idx) => (
-                <TreeNode key={agent.id} node={agent} delay={0.1 + idx * 0.1} />
+                <TreeNode key={agent.id} node={agent} delay={0.1 + idx * 0.1} isActive={isNodeActive(agent.id)} />
               ))}
             </div>
             
             {/* Level 3: Synthesis */}
             <div className="absolute left-[535px] top-1/2 -translate-y-1/2" style={{ zIndex: 1 }}>
-              <TreeNode node={treeData.synthesis} delay={0.4} />
+              <TreeNode node={treeData.synthesis} delay={0.4} isActive={isNodeActive('analyze')} />
             </div>
             
             {/* Level 4: Outputs */}
             <div className="absolute right-[100px] top-1/2 -translate-y-1/2 flex flex-col gap-3" style={{ zIndex: 1 }}>
               {treeData.outputs.map((output, idx) => (
-                <TreeNode key={output.id} node={output} delay={0.5 + idx * 0.1} />
+                <TreeNode key={output.id} node={output} delay={0.5 + idx * 0.1} isActive={isNodeActive(output.id)} />
               ))}
             </div>
           </div>
@@ -303,11 +479,11 @@ export function BackendFlowDiagram() {
 
         {/* Tablet: Simplified horizontal */}
         <div className="hidden md:flex lg:hidden items-center justify-center gap-6 max-w-3xl mx-auto">
-          <TreeNode node={treeData.root} delay={0} />
+          <TreeNode node={treeData.root} delay={0} isActive={isNodeActive('input')} />
           <div className="w-8 h-0.5 bg-gradient-to-r from-primary/50 to-accent/50" />
-          <TreeNode node={treeData.synthesis} delay={0.2} />
-          <div className="w-8 h-0.5 bg-gradient-to-r from-accent/50 to-emerald-500/50" />
-          <TreeNode node={treeData.outputs[0]} delay={0.4} />
+          <TreeNode node={treeData.synthesis} delay={0.2} isActive={isNodeActive('analyze')} />
+          <div className="w-8 h-0.5 bg-gradient-to-r from-accent/50 to-success/50" />
+          <TreeNode node={treeData.outputs[0]} delay={0.4} isActive={isNodeActive('design')} />
         </div>
 
         {/* Mobile: Vertical Tree */}
@@ -315,7 +491,7 @@ export function BackendFlowDiagram() {
           <MobileConnectingLines />
           
           <div className="relative flex flex-col items-center gap-6">
-            <TreeNode node={treeData.root} delay={0} />
+            <TreeNode node={treeData.root} delay={0} isActive={isNodeActive('input')} />
             
             {/* Agents row */}
             <div className="flex gap-2 justify-center">
@@ -328,9 +504,15 @@ export function BackendFlowDiagram() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: 0.1 + idx * 0.1 }}
                 >
-                  <div className={`rounded-xl bg-card/80 backdrop-blur-sm border ${agent.borderColor} p-3 text-center`}>
+                  <div className={`rounded-xl bg-card/80 backdrop-blur-sm border ${agent.borderColor} p-3 text-center transition-all duration-300 ${
+                    isNodeActive(agent.id) ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-105' : ''
+                  }`}>
                     <div className={`w-8 h-8 rounded-lg ${agent.iconBg} ${agent.iconColor} flex items-center justify-center mx-auto mb-1`}>
-                      <agent.icon className="w-4 h-4" />
+                      {isNodeActive(agent.id) ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <agent.icon className="w-4 h-4" />
+                      )}
                     </div>
                     <p className="text-xs font-medium text-foreground">{agent.title}</p>
                   </div>
@@ -338,12 +520,12 @@ export function BackendFlowDiagram() {
               ))}
             </div>
             
-            <TreeNode node={treeData.synthesis} delay={0.4} />
+            <TreeNode node={treeData.synthesis} delay={0.4} isActive={isNodeActive('analyze')} />
             
             {/* Outputs row */}
             <div className="flex gap-4 justify-center">
               {treeData.outputs.map((output, idx) => (
-                <TreeNode key={output.id} node={output} delay={0.5 + idx * 0.1} />
+                <TreeNode key={output.id} node={output} delay={0.5 + idx * 0.1} isActive={isNodeActive(output.id)} />
               ))}
             </div>
           </div>
