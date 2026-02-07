@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FileText, Brain, Layers, FileStack, Code2, Shield } from 'lucide-react';
+import { FileText, Brain, Layers, FileStack, Code2, Shield, ChevronRight } from 'lucide-react';
 
 const steps = [
   {
@@ -61,80 +61,54 @@ export function HowItWorks() {
 
         {/* Isometric Flow - Desktop */}
         <div className="hidden lg:block relative">
-          <div className="flex items-start justify-between max-w-5xl mx-auto gap-4" style={{ '--gap': '32px' } as React.CSSProperties}>
+          <div className="flex items-start justify-center max-w-6xl mx-auto">
             {steps.map((step, idx) => (
-              <motion.div
-                key={step.title}
-                className="relative flex flex-col items-center"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-              >
-                {/* Isometric Card */}
-                <div
-                  className="relative w-24 h-24 bg-card border border-border rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300"
-                  style={{
-                    transform: 'perspective(1000px) rotateX(10deg) rotateY(-5deg)',
-                    transformStyle: 'preserve-3d',
-                  }}
+              <div key={step.title} className="flex items-start">
+                <motion.div
+                  className="flex flex-col items-center"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
                 >
-                  <div className={`absolute inset-0 flex items-center justify-center rounded-xl ${step.color}`}>
-                    <step.icon className="w-10 h-10" />
+                  {/* Isometric Card */}
+                  <div
+                    className="relative w-24 h-24 bg-card border border-border rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300"
+                    style={{
+                      transform: 'perspective(1000px) rotateX(10deg) rotateY(-5deg)',
+                      transformStyle: 'preserve-3d',
+                    }}
+                  >
+                    <div className={`absolute inset-0 flex items-center justify-center rounded-xl ${step.color}`}>
+                      <step.icon className="w-10 h-10" />
+                    </div>
+                    {/* 3D effect shadow */}
+                    <div 
+                      className="absolute -bottom-2 -right-2 w-full h-full bg-border/50 rounded-xl -z-10"
+                      style={{ transform: 'translateZ(-10px)' }}
+                    />
                   </div>
-                  {/* 3D effect shadow */}
-                  <div 
-                    className="absolute -bottom-2 -right-2 w-full h-full bg-border/50 rounded-xl -z-10"
-                    style={{ transform: 'translateZ(-10px)' }}
-                  />
-                </div>
 
-                {/* Label */}
-                <div className="mt-4 text-center">
-                  <p className="font-semibold text-foreground text-sm">{step.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
-                </div>
+                  {/* Label */}
+                  <div className="mt-4 text-center w-24">
+                    <p className="font-semibold text-foreground text-sm">{step.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
+                  </div>
+                </motion.div>
 
                 {/* Connector Arrow */}
                 {idx < steps.length - 1 && (
-                  <motion.svg
-                    className="absolute top-10 left-full w-8 h-8 pointer-events-none ml-1"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
+                  <motion.div
+                    className="flex items-center justify-center h-24 px-3"
+                    initial={{ opacity: 0, scale: 0 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: idx * 0.1 + 0.3 }}
+                    transition={{ duration: 0.3, delay: idx * 0.1 + 0.3 }}
                   >
-                    <defs>
-                      <marker
-                        id={`arrowhead-${idx}`}
-                        markerWidth="10"
-                        markerHeight="7"
-                        refX="9"
-                        refY="3.5"
-                        orient="auto"
-                      >
-                        <polygon
-                          points="0 0, 10 3.5, 0 7"
-                          fill="hsl(var(--primary))"
-                        />
-                      </marker>
-                    </defs>
-                    <motion.line
-                      x1="0"
-                      y1="16"
-                      x2="24"
-                      y2="16"
-                      stroke="hsl(var(--border))"
-                      strokeWidth="2"
-                      markerEnd={`url(#arrowhead-${idx})`}
-                      initial={{ pathLength: 0 }}
-                      whileInView={{ pathLength: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.8, delay: idx * 0.1 + 0.3 }}
-                    />
-                  </motion.svg>
+                    <ChevronRight className="w-6 h-6 text-primary" />
+                  </motion.div>
                 )}
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
