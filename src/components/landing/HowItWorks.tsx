@@ -95,25 +95,38 @@ export function HowItWorks() {
                   <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
                 </div>
 
-                {/* Connector Line */}
+                {/* Connector Arrow */}
                 {idx < steps.length - 1 && (
                   <motion.svg
-                    className="absolute top-10 left-[calc(100%+8px)] w-[calc(100%-16px)] h-8 pointer-events-none"
-                    style={{ width: 'calc(var(--gap, 32px) - 16px)' }}
+                    className="absolute top-10 left-full w-8 h-8 pointer-events-none ml-1"
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: idx * 0.1 + 0.3 }}
-                    preserveAspectRatio="none"
                   >
+                    <defs>
+                      <marker
+                        id={`arrowhead-${idx}`}
+                        markerWidth="10"
+                        markerHeight="7"
+                        refX="9"
+                        refY="3.5"
+                        orient="auto"
+                      >
+                        <polygon
+                          points="0 0, 10 3.5, 0 7"
+                          fill="hsl(var(--primary))"
+                        />
+                      </marker>
+                    </defs>
                     <motion.line
                       x1="0"
                       y1="16"
-                      x2="100%"
+                      x2="24"
                       y2="16"
                       stroke="hsl(var(--border))"
                       strokeWidth="2"
-                      strokeDasharray="4 4"
+                      markerEnd={`url(#arrowhead-${idx})`}
                       initial={{ pathLength: 0 }}
                       whileInView={{ pathLength: 1 }}
                       viewport={{ once: true }}
