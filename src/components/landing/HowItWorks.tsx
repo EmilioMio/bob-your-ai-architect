@@ -61,7 +61,7 @@ export function HowItWorks() {
 
         {/* Isometric Flow - Desktop */}
         <div className="hidden lg:block relative">
-          <div className="flex items-center justify-between max-w-5xl mx-auto">
+          <div className="flex items-start justify-between max-w-5xl mx-auto gap-4" style={{ '--gap': '32px' } as React.CSSProperties}>
             {steps.map((step, idx) => (
               <motion.div
                 key={step.title}
@@ -98,15 +98,19 @@ export function HowItWorks() {
                 {/* Connector Line */}
                 {idx < steps.length - 1 && (
                   <motion.svg
-                    className="absolute top-12 -right-16 w-32 h-8"
+                    className="absolute top-10 left-[calc(100%+8px)] w-[calc(100%-16px)] h-8 pointer-events-none"
+                    style={{ width: 'calc(var(--gap, 32px) - 16px)' }}
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: idx * 0.1 + 0.3 }}
+                    preserveAspectRatio="none"
                   >
-                    <motion.path
-                      d="M0 16 Q32 0 64 16 T128 16"
-                      fill="none"
+                    <motion.line
+                      x1="0"
+                      y1="16"
+                      x2="100%"
+                      y2="16"
                       stroke="hsl(var(--border))"
                       strokeWidth="2"
                       strokeDasharray="4 4"
@@ -114,16 +118,6 @@ export function HowItWorks() {
                       whileInView={{ pathLength: 1 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.8, delay: idx * 0.1 + 0.3 }}
-                    />
-                    <motion.circle
-                      cx="128"
-                      cy="16"
-                      r="3"
-                      fill="hsl(var(--primary))"
-                      initial={{ scale: 0 }}
-                      whileInView={{ scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.3, delay: idx * 0.1 + 0.8 }}
                     />
                   </motion.svg>
                 )}
