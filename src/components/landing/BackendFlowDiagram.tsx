@@ -293,7 +293,7 @@ export function BackendFlowDiagram() {
             </div>
             
             {/* Level 4: Outputs */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-3" style={{ zIndex: 1 }}>
+            <div className="absolute right-[100px] top-1/2 -translate-y-1/2 flex flex-col gap-3" style={{ zIndex: 1 }}>
               {treeData.outputs.map((output, idx) => (
                 <TreeNode key={output.id} node={output} delay={0.5 + idx * 0.1} />
               ))}
