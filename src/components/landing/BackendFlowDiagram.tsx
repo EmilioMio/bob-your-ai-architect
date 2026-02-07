@@ -1,6 +1,3 @@
-Backendflowdiagram · TSX
-Copy
-
 import { motion } from 'framer-motion';
 import { Monitor, Brain, Users, FileCode, ArrowRight, Shield } from 'lucide-react';
 
