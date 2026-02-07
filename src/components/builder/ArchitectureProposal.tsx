@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronDown, ChevronRight, FolderTree, FileCode, Shield, Zap, 
   Coins, Settings, Download, Copy, ExternalLink, ArrowLeft,
-  Check, Lightbulb, Scale, Target
+  Check, Lightbulb, Scale, Target, Loader2, X
 } from 'lucide-react';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import { ProjectFormData, Agent } from './types';
 
 interface ArchitectureProposalProps {
@@ -14,8 +16,8 @@ interface ArchitectureProposalProps {
 }
 
 // File tree structure
-const generateFileTree = () => ({
-  name: 'analytics-dashboard',
+const generateFileTree = (projectName: string) => ({
+  name: projectName.toLowerCase().replace(/\s+/g, '-'),
   type: 'folder' as const,
   children: [
     {
@@ -237,10 +239,270 @@ function TreeNode({ node, depth = 0 }: TreeNodeProps) {
   );
 }
 
+// Generate file contents for the zip
+const generateFileContents = (projectName: string, formData: ProjectFormData) => {
+  const safeName = projectName.toLowerCase().replace(/\s+/g, '-');
+  
+  return {
+    'README.md': `# ${projectName}
+
+## Project Overview
+${formData.project}
+
+## Team
+- Size: ${formData.teamSize}
+- Experience: ${formData.experience}
+- Timeline: ${formData.timeline}
+
+## Getting Started
+
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`
+
+## Architecture
+This project follows a modular monolith architecture with feature-based organization.
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed architectural guidelines.
+
+## Tech Stack
+- Frontend: Next.js 14 (App Router), React, TypeScript
+- Styling: Tailwind CSS
+- Database: PostgreSQL (Supabase)
+- Auth: NextAuth.js with JWT
+- Deployment: Vercel
+`,
+    'ARCHITECTURE.md': `# Architecture Guidelines
+
+## File Structure Rules
+
+### Component Rules
+- UI components → /src/components/ui/
+- Feature components → /src/components/features/
+- Max 200 lines per component
+- One component per file
+
+### Business Logic Rules
+- API calls only in /src/lib/api/
+- Database queries in /src/lib/db/
+- No business logic in components
+
+### Authentication Rules
+- Session management in /src/lib/auth/
+- RBAC checks via middleware
+- No inline permission checks
+
+### Naming Conventions
+- Components: PascalCase
+- Utilities: camelCase
+- Hooks: must start with "use"
+- API routes: kebab-case
+
+## Security Considerations
+- Role-Based Access Control (RBAC)
+- JWT with refresh tokens
+- Environment-based secret management
+
+## Performance Guidelines
+- Server Components by default
+- Redis caching for analytics (at scale)
+- Dynamic imports for heavy libraries
+`,
+    'package.json': JSON.stringify({
+      name: safeName,
+      version: '0.1.0',
+      private: true,
+      scripts: {
+        dev: 'next dev',
+        build: 'next build',
+        start: 'next start',
+        lint: 'next lint',
+      },
+      dependencies: {
+        next: '^14.0.0',
+        react: '^18.2.0',
+        'react-dom': '^18.2.0',
+        typescript: '^5.0.0',
+        '@tanstack/react-query': '^5.0.0',
+        'next-auth': '^4.24.0',
+        tailwindcss: '^3.4.0',
+        zod: '^3.22.0',
+      },
+      devDependencies: {
+        '@types/node': '^20.0.0',
+        '@types/react': '^18.2.0',
+        '@types/react-dom': '^18.2.0',
+        eslint: '^8.0.0',
+        'eslint-config-next': '^14.0.0',
+      },
+    }, null, 2),
+    '.env.example': `# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/db
+
+# Authentication
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-here
+
+# OAuth Providers (optional)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+`,
+    'tsconfig.json': JSON.stringify({
+      compilerOptions: {
+        target: 'es5',
+        lib: ['dom', 'dom.iterable', 'esnext'],
+        allowJs: true,
+        skipLibCheck: true,
+        strict: true,
+        noEmit: true,
+        esModuleInterop: true,
+        module: 'esnext',
+        moduleResolution: 'bundler',
+        resolveJsonModule: true,
+        isolatedModules: true,
+        jsx: 'preserve',
+        incremental: true,
+        plugins: [{ name: 'next' }],
+        paths: {
+          '@/*': ['./src/*'],
+        },
+      },
+      include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+      exclude: ['node_modules'],
+    }, null, 2),
+    'next.config.js': `/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  images: {
+    domains: [],
+  },
+};
+
+module.exports = nextConfig;
+`,
+    'src/app/layout.tsx': `import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: '${projectName}',
+  description: '${formData.project}',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
+    </html>
+  );
+}
+`,
+    'src/app/page.tsx': `export default function Home() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <h1 className="text-4xl font-bold mb-4">${projectName}</h1>
+      <p className="text-gray-600">Your project is ready to go!</p>
+    </main>
+  );
+}
+`,
+    'src/app/globals.css': `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+`,
+    'src/lib/utils.ts': `import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+`,
+    'src/lib/api/client.ts': `// API client for making requests
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+
+export async function apiClient<T>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T> {
+  const response = await fetch(\`\${API_BASE}\${endpoint}\`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(\`API error: \${response.status}\`);
+  }
+
+  return response.json();
+}
+`,
+    'src/lib/auth/session.ts': `// Session management utilities
+import { getServerSession } from 'next-auth';
+
+export async function getSession() {
+  return await getServerSession();
+}
+
+export async function requireAuth() {
+  const session = await getSession();
+  if (!session) {
+    throw new Error('Authentication required');
+  }
+  return session;
+}
+`,
+    'src/hooks/useAuth.ts': `'use client';
+
+import { useSession } from 'next-auth/react';
+
+export function useAuth() {
+  const { data: session, status } = useSession();
+  
+  return {
+    user: session?.user,
+    isLoading: status === 'loading',
+    isAuthenticated: status === 'authenticated',
+  };
+}
+`,
+  };
+};
+
 export function ArchitectureProposal({ formData, agents, onBack }: ArchitectureProposalProps) {
   const [expandedAgents, setExpandedAgents] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
-  const fileTree = generateFileTree();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  const projectName = formData.project.split(' ').slice(0, 3).join(' ');
+  const fileTree = generateFileTree(projectName);
 
   const toggleAgent = (id: string) => {
     setExpandedAgents(prev => 
@@ -255,6 +517,88 @@ export function ArchitectureProposal({ formData, agents, onBack }: ArchitectureP
     navigator.clipboard.writeText(rulesText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleGenerateFiles = async () => {
+    setIsGenerating(true);
+    setGenerationProgress(0);
+
+    try {
+      const zip = new JSZip();
+      const files = generateFileContents(projectName, formData);
+      const fileEntries = Object.entries(files);
+      
+      // Simulate progress
+      for (let i = 0; i < fileEntries.length; i++) {
+        const [path, content] = fileEntries[i];
+        zip.file(path, content);
+        setGenerationProgress(Math.round(((i + 1) / fileEntries.length) * 100));
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
+
+      // Generate and download
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const safeName = projectName.toLowerCase().replace(/\s+/g, '-');
+      saveAs(blob, `${safeName}-project.zip`);
+      
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error('Error generating files:', error);
+    } finally {
+      setIsGenerating(false);
+      setGenerationProgress(0);
+    }
+  };
+
+  const handleExportArchitecture = () => {
+    const safeName = projectName.toLowerCase().replace(/\s+/g, '-');
+    
+    // Export JSON
+    const architectureData = {
+      projectName,
+      formData,
+      fileTree,
+      agentDecisions,
+      architectureRules,
+      toolRecommendations,
+      generatedAt: new Date().toISOString(),
+    };
+    
+    const jsonBlob = new Blob([JSON.stringify(architectureData, null, 2)], { type: 'application/json' });
+    saveAs(jsonBlob, `${safeName}-architecture.json`);
+
+    // Export Markdown
+    const mdContent = `# ${projectName} - Architecture Documentation
+
+## Project Details
+- **Description**: ${formData.project}
+- **Team Size**: ${formData.teamSize}
+- **Timeline**: ${formData.timeline}
+- **Experience Level**: ${formData.experience}
+
+## Agent Recommendations
+
+${agentDecisions.map(agent => `### ${agent.icon} ${agent.name}
+${agent.summary.map(s => `- ${s}`).join('\n')}
+${agent.estimate ? `\n**Estimate**: ${agent.estimate}` : ''}`).join('\n\n')}
+
+## Architectural Rules
+
+${architectureRules.map(cat => `### ${cat.category} ${cat.icon || ''}
+${cat.rules.map(r => `- ${r}`).join('\n')}`).join('\n\n')}
+
+## Recommended Tools
+
+${toolRecommendations.map(tool => `### ${tool.icon} ${tool.name}
+- **Purpose**: ${tool.purpose}
+- **Why**: ${tool.reason}`).join('\n\n')}
+
+---
+*Generated by Bob the Architect on ${new Date().toLocaleDateString()}*
+`;
+
+    const mdBlob = new Blob([mdContent], { type: 'text/markdown' });
+    saveAs(mdBlob, `${safeName}-architecture.md`);
   };
 
   return (
@@ -417,18 +761,81 @@ export function ArchitectureProposal({ formData, agents, onBack }: ArchitectureP
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3">
         <motion.button
-          className="flex-1 btn-primary py-4 text-lg group"
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
+          className="flex-1 btn-primary py-4 text-lg group disabled:opacity-70"
+          whileHover={{ scale: isGenerating ? 1 : 1.01 }}
+          whileTap={{ scale: isGenerating ? 1 : 0.99 }}
+          onClick={handleGenerateFiles}
+          disabled={isGenerating}
         >
-          <Download className="w-5 h-5 mr-2" />
-          Generate Project Files
+          {isGenerating ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Generating... {generationProgress}%
+            </>
+          ) : (
+            <>
+              <Download className="w-5 h-5 mr-2" />
+              Generate Project Files
+            </>
+          )}
         </motion.button>
-        <button className="btn-ghost px-6">
+        <button 
+          className="btn-ghost px-6"
+          onClick={handleExportArchitecture}
+        >
           <ExternalLink className="w-4 h-4 mr-2" />
           Export Architecture
         </button>
       </div>
+
+      {/* Success Modal */}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowSuccessModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-card rounded-2xl p-6 max-w-md w-full shadow-2xl border border-border"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-foreground">✅ Project Generated!</h3>
+                <button onClick={() => setShowSuccessModal(false)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <p className="text-sm text-muted-foreground mb-4">
+                Your "{projectName}" project has been downloaded successfully.
+              </p>
+              
+              <div className="bg-muted/50 rounded-xl p-4 mb-4">
+                <h4 className="font-medium text-foreground text-sm mb-2">🔌 Next Steps:</h4>
+                <ol className="text-xs text-muted-foreground space-y-2">
+                  <li>1. Unzip the downloaded file</li>
+                  <li>2. Run: <code className="bg-muted px-1 rounded">npm install</code></li>
+                  <li>3. Run: <code className="bg-muted px-1 rounded">npm run dev</code></li>
+                  <li>4. Start building with Bob watching your code!</li>
+                </ol>
+              </div>
+
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full btn-primary"
+              >
+                Got it!
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

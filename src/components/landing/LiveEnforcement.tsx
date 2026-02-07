@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Check, Zap, X, ArrowRight } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 const scenarios = [
   {
@@ -19,6 +22,7 @@ function UserProfile() {
       title: 'Bob caught something',
       message: 'API calls should be in /src/lib/api/\nThis keeps your components pure and testable.',
     },
+    rule: 'API calls only in /src/lib/api/',
     fixedCode: `// src/lib/api/userApi.js
 export const fetchUser = async () => {
   const res = await fetch('/api/user');
@@ -52,6 +56,7 @@ function UserCard({ user }) {
       title: 'Bob caught something',
       message: 'Components belong in /src/components/\nThis maintains a clean separation of concerns.',
     },
+    rule: 'Components should be in /src/components/',
     fixedCode: `// src/components/features/UserCard.jsx
 // ✓ Moved to correct location
 
@@ -86,6 +91,7 @@ function Dashboard() {
       title: 'Bob caught something',
       message: 'Component exceeds 200 lines (currently 312)\nConsider splitting into smaller, focused components.',
     },
+    rule: 'Max 200 lines per component',
     fixedCode: `// src/components/features/Dashboard/
 // ├── index.jsx (42 lines)
 // ├── DashboardHeader.jsx (65 lines)
@@ -98,10 +104,22 @@ function Dashboard() {
   },
 ];
 
+const exampleRules = [
+  'API calls only in /src/lib/api/',
+  'Components should be in /src/components/',
+  'Max 200 lines per component',
+  'Hooks must start with "use"',
+  'No inline styles in components',
+];
+
 export function LiveEnforcement() {
   const [activeScenario, setActiveScenario] = useState(scenarios[0]);
   const [isFixed, setIsFixed] = useState(false);
   const [isFixing, setIsFixing] = useState(false);
+  const [showIgnoreMessage, setShowIgnoreMessage] = useState(false);
+  const [showUpdateRuleModal, setShowUpdateRuleModal] = useState(false);
+  const [customRule, setCustomRule] = useState('');
+  const [ruleUpdated, setRuleUpdated] = useState(false);
 
   const handleFix = () => {
     setIsFixing(true);
@@ -115,6 +133,30 @@ export function LiveEnforcement() {
     setActiveScenario(scenario);
     setIsFixed(false);
     setIsFixing(false);
+    setShowIgnoreMessage(false);
+    setRuleUpdated(false);
+  };
+
+  const handleIgnore = () => {
+    setShowIgnoreMessage(true);
+    setTimeout(() => {
+      setShowIgnoreMessage(false);
+      // Move to next scenario or reset
+      const currentIndex = scenarios.findIndex(s => s.id === activeScenario.id);
+      const nextIndex = (currentIndex + 1) % scenarios.length;
+      handleScenarioChange(scenarios[nextIndex]);
+    }, 2500);
+  };
+
+  const handleUpdateRule = () => {
+    setCustomRule(activeScenario.rule);
+    setShowUpdateRuleModal(true);
+  };
+
+  const handleSaveRule = () => {
+    setShowUpdateRuleModal(false);
+    setRuleUpdated(true);
+    setTimeout(() => setRuleUpdated(false), 3000);
   };
 
   return (
@@ -190,7 +232,53 @@ export function LiveEnforcement() {
           {/* Bob's Feedback */}
           <div className="flex flex-col gap-4">
             <AnimatePresence mode="wait">
-              {!isFixed ? (
+              {showIgnoreMessage ? (
+                <motion.div
+                  key="ignore"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="card-elevated p-6 border-l-4 border-l-muted-foreground"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                      <X className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-2">
+                        Warning ignored
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Bob won't flag this pattern again in this session.
+                        Moving to next scenario...
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : ruleUpdated ? (
+                <motion.div
+                  key="updated"
+                  initial={{ opacity: 0, x: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="card-elevated p-6 border-l-4 border-l-primary"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-2">
+                        ✓ Rule updated successfully
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Your custom rule has been saved. Bob will now use this rule
+                        for future enforcement.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : !isFixed ? (
                 <motion.div
                   key="warning"
                   initial={{ opacity: 0, x: 20 }}
@@ -231,11 +319,17 @@ export function LiveEnforcement() {
                             </>
                           )}
                         </button>
-                        <button className="btn-ghost text-sm py-2 px-4">
+                        <button 
+                          className="btn-ghost text-sm py-2 px-4"
+                          onClick={handleIgnore}
+                        >
                           <X className="w-4 h-4 mr-2" />
                           Ignore this time
                         </button>
-                        <button className="btn-ghost text-sm py-2 px-4">
+                        <button 
+                          className="btn-ghost text-sm py-2 px-4"
+                          onClick={handleUpdateRule}
+                        >
                           Update rule
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </button>
@@ -280,6 +374,58 @@ export function LiveEnforcement() {
           </div>
         </motion.div>
       </div>
+
+      {/* Update Rule Modal */}
+      <Dialog open={showUpdateRuleModal} onOpenChange={setShowUpdateRuleModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Architectural Rule</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Current rule:</p>
+              <div className="bg-muted rounded-lg p-3">
+                <p className="text-sm font-mono text-foreground">{activeScenario.rule}</p>
+              </div>
+            </div>
+            
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">New rule:</p>
+              <Textarea
+                value={customRule}
+                onChange={(e) => setCustomRule(e.target.value)}
+                placeholder="Enter your custom rule..."
+                className="min-h-[80px]"
+              />
+            </div>
+
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Example rules for inspiration:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {exampleRules.map((rule) => (
+                  <button
+                    key={rule}
+                    onClick={() => setCustomRule(rule)}
+                    className="text-xs px-2 py-1 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+                  >
+                    {rule}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowUpdateRuleModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveRule} disabled={!customRule.trim()}>
+              Update Rule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
