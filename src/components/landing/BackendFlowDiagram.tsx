@@ -1,42 +1,42 @@
-import { motion } from 'framer-motion';
-import { Monitor, Brain, Users, FileCode, Shield, ArrowRight } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Monitor, Brain, Users, FileCode, ArrowRight, Shield } from "lucide-react";
 
 const flowLayers = [
   {
-    title: 'Input',
+    title: "Input",
     icon: Monitor,
-    color: 'from-primary/20 to-primary/5',
-    borderColor: 'border-primary/30',
-    iconColor: 'text-primary',
-    dotColor: 'bg-primary',
-    nodes: ['User Interface', 'API Gateway'],
+    color: "from-primary/20 to-primary/5",
+    borderColor: "border-primary/30",
+    iconColor: "text-primary",
+    dotColor: "bg-primary",
+    nodes: ["User Interface", "API Gateway"],
   },
   {
-    title: 'Core Engine',
+    title: "Core Engine",
     icon: Brain,
-    color: 'from-accent/20 to-accent/5',
-    borderColor: 'border-accent/30',
-    iconColor: 'text-accent',
-    dotColor: 'bg-accent',
-    nodes: ['Parser', 'Analyzer', 'AI', 'Rules'],
+    color: "from-accent/20 to-accent/5",
+    borderColor: "border-accent/30",
+    iconColor: "text-accent",
+    dotColor: "bg-accent",
+    nodes: ["Parser", "Analyzer", "AI", "Rules"],
   },
   {
-    title: 'Orchestration',
+    title: "Orchestration",
     icon: Users,
-    color: 'from-code-keyword/20 to-code-keyword/5',
-    borderColor: 'border-code-keyword/30',
-    iconColor: 'text-code-keyword',
-    dotColor: 'bg-code-keyword',
-    nodes: ['Lovable', 'Cursor', 'Copilot'],
+    color: "from-code-keyword/20 to-code-keyword/5",
+    borderColor: "border-code-keyword/30",
+    iconColor: "text-code-keyword",
+    dotColor: "bg-code-keyword",
+    nodes: ["Lovable", "Cursor", "Copilot"],
   },
   {
-    title: 'Output',
+    title: "Output",
     icon: FileCode,
-    color: 'from-warning/20 to-warning/5',
-    borderColor: 'border-warning/30',
-    iconColor: 'text-warning',
-    dotColor: 'bg-warning',
-    nodes: ['File Gen', 'VS Code', 'Enforce'],
+    color: "from-warning/20 to-warning/5",
+    borderColor: "border-warning/30",
+    iconColor: "text-warning",
+    dotColor: "bg-warning",
+    nodes: ["File Gen", "VS Code", "Enforce"],
   },
 ];
 
@@ -51,115 +51,304 @@ export function BackendFlowDiagram() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Visualize your flow
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Visualize your flow</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             How Bob's architecture engine works under the hood
           </p>
         </motion.div>
 
-        {/* Desktop: Horizontal Workflow */}
-        <div className="hidden lg:block relative">
-          {/* Connection Lines SVG */}
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            preserveAspectRatio="none"
-          >
+        {/* Legend */}
+        <motion.div
+          className="flex justify-center gap-6 mb-12 flex-wrap"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="w-12 h-0.5 bg-gradient-to-r from-primary to-accent" />
+            <span>main workflow</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="w-12 h-0.5 border-t-2 border-dashed border-muted-foreground/40" />
+            <span>internal dependency</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="w-12 h-0.5 border-t border-dotted border-muted-foreground/30" />
+            <span>supportive / tooling</span>
+          </div>
+        </motion.div>
+
+        {/* Desktop: Network-style Architecture */}
+        <div className="hidden lg:block relative max-w-7xl mx-auto">
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
             <defs>
-              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.4" />
-                <stop offset="50%" stopColor="hsl(var(--accent))" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="hsl(var(--warning))" stopOpacity="0.4" />
+              <linearGradient id="mainFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity="0.6" />
               </linearGradient>
             </defs>
-            {/* Main flow line */}
+
+            {/* Main workflow: Client → API → Data → Deploy */}
             <motion.path
-              d="M 12% 50% Q 25% 35% 37% 50% T 62% 50% T 88% 50%"
+              d="M 220 280 L 520 280"
+              stroke="url(#mainFlow)"
+              strokeWidth="2.5"
               fill="none"
-              stroke="url(#lineGradient)"
-              strokeWidth="3"
-              strokeLinecap="round"
               initial={{ pathLength: 0 }}
               whileInView={{ pathLength: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: "easeInOut" }}
+              transition={{ duration: 1, delay: 0.5 }}
+            />
+            <motion.path
+              d="M 720 280 L 970 280"
+              stroke="url(#mainFlow)"
+              strokeWidth="2.5"
+              fill="none"
+              initial={{ pathLength: 0 }}
+              whileInView={{ pathLength: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.7 }}
+            />
+            <motion.path
+              d="M 1170 280 L 1320 280"
+              stroke="url(#mainFlow)"
+              strokeWidth="2.5"
+              fill="none"
+              initial={{ pathLength: 0 }}
+              whileInView={{ pathLength: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.9 }}
+            />
+
+            {/* Internal dependencies (dashed) */}
+            <motion.path
+              d="M 620 200 L 620 240"
+              stroke="hsl(var(--muted-foreground))"
+              strokeWidth="2"
+              strokeDasharray="8,4"
+              fill="none"
+              initial={{ pathLength: 0 }}
+              whileInView={{ pathLength: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+            />
+
+            {/* Supportive connections (dotted) */}
+            <motion.path
+              d="M 370 150 L 620 240"
+              stroke="hsl(var(--muted-foreground))"
+              strokeWidth="1.5"
+              strokeDasharray="2,4"
+              fill="none"
+              opacity="0.4"
+              initial={{ pathLength: 0 }}
+              whileInView={{ pathLength: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 1.4 }}
+            />
+            <motion.path
+              d="M 370 380 L 620 320"
+              stroke="hsl(var(--muted-foreground))"
+              strokeWidth="1.5"
+              strokeDasharray="2,4"
+              fill="none"
+              opacity="0.4"
+              initial={{ pathLength: 0 }}
+              whileInView={{ pathLength: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 1.5 }}
             />
           </svg>
 
-          <div className="relative flex items-stretch justify-between max-w-6xl mx-auto gap-6">
-            {flowLayers.map((layer, idx) => (
-              <motion.div
-                key={layer.title}
-                className="relative flex-1 flex flex-col"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.15 }}
-              >
-                {/* Step Number */}
-                <motion.div
-                  className={`absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full ${layer.dotColor} flex items-center justify-center text-white text-sm font-bold shadow-lg z-10`}
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.3, delay: idx * 0.15 + 0.3, type: "spring" }}
-                >
-                  {idx + 1}
-                </motion.div>
-
-                {/* Layer Card */}
-                <div
-                  className={`relative h-full rounded-3xl bg-gradient-to-b ${layer.color} border ${layer.borderColor} p-6 backdrop-blur-sm`}
-                >
-                  {/* Icon Header */}
-                  <div className="flex items-center gap-3 mb-5 mt-2">
-                    <div className={`p-2.5 rounded-xl bg-background/80 ${layer.iconColor} shadow-sm`}>
-                      <layer.icon className="w-5 h-5" />
-                    </div>
-                    <span className="font-semibold text-foreground">{layer.title}</span>
+          <div className="relative grid grid-cols-5 gap-8" style={{ minHeight: "500px" }}>
+            {/* Frontend Tools (Top Left) */}
+            <motion.div
+              className="col-start-1 row-start-1 self-start"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <div className="rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20 p-5 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-3 h-3 rounded-sm bg-purple-500" />
+                  <span className="text-sm font-semibold text-foreground">Frontend Tools</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="px-3 py-2 rounded-lg bg-background/60 border border-border/40 text-sm font-medium">
+                    Next.js
                   </div>
-
-                  {/* Nodes with connecting dots */}
-                  <div className="space-y-2.5">
-                    {layer.nodes.map((node, nodeIdx) => (
-                      <motion.div
-                        key={node}
-                        className="relative flex items-center gap-2"
-                        initial={{ opacity: 0, x: -10 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.3, delay: idx * 0.15 + nodeIdx * 0.05 + 0.3 }}
-                      >
-                        {/* Node dot */}
-                        <div className={`w-2 h-2 rounded-full ${layer.dotColor} opacity-60 flex-shrink-0`} />
-                        {/* Node label */}
-                        <div
-                          className="flex-1 px-3 py-2 rounded-xl bg-background/70 border border-border/40 text-sm text-foreground font-medium hover:bg-background hover:border-border/60 transition-all cursor-default"
-                        >
-                          {node}
-                        </div>
-                      </motion.div>
-                    ))}
+                  <div className="px-3 py-2 rounded-lg bg-background/60 border border-border/40 text-sm font-medium">
+                    Tailwind CSS
                   </div>
                 </div>
+              </div>
+            </motion.div>
 
-                {/* Arrow Connector */}
-                {idx < flowLayers.length - 1 && (
-                  <motion.div
-                    className="absolute top-1/2 -right-5 transform -translate-y-1/2 z-10"
-                    initial={{ opacity: 0, x: -10 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.3, delay: idx * 0.15 + 0.5 }}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-background border border-border/60 flex items-center justify-center shadow-sm">
-                      <ArrowRight className="w-4 h-4 text-muted-foreground" />
+            {/* Client (Center Left) */}
+            <motion.div
+              className="col-start-1 row-start-2 self-center"
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <div
+                className={`rounded-2xl bg-gradient-to-br ${flowLayers[0].color} border ${flowLayers[0].borderColor} p-6 backdrop-blur-sm`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`p-2.5 rounded-xl bg-background/80 ${flowLayers[0].iconColor} shadow-sm`}>
+                    <Monitor className="w-5 h-5" />
+                  </div>
+                  <span className="font-semibold text-foreground">Client</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${flowLayers[0].dotColor} opacity-60`} />
+                    <div className="px-3 py-2 rounded-lg bg-background/70 border border-border/40 text-sm font-medium flex-1">
+                      UI
+                      <div className="text-xs text-muted-foreground mt-0.5">Interface layer</div>
                     </div>
-                  </motion.div>
-                )}
-              </motion.div>
-            ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Support (Bottom Left) */}
+            <motion.div
+              className="col-start-1 row-start-3 self-end"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <div className="rounded-2xl bg-gradient-to-br from-slate-500/10 to-slate-500/5 border border-slate-500/20 p-5 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-3 h-3 rounded-sm bg-slate-500" />
+                  <span className="text-sm font-semibold text-foreground">Support</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="px-3 py-2 rounded-lg bg-background/60 border border-border/40 text-sm font-medium">
+                    Stripe
+                  </div>
+                  <div className="px-3 py-2 rounded-lg bg-background/60 border border-border/40 text-sm font-medium">
+                    TypeScript
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Backend Tools (Top Center) */}
+            <motion.div
+              className="col-start-2 row-start-1 self-start"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+            >
+              <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 p-5 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-3 h-3 rounded-sm bg-blue-500" />
+                  <span className="text-sm font-semibold text-foreground">Backend Tools</span>
+                </div>
+                <div className="px-3 py-2 rounded-lg bg-background/60 border border-border/40 text-sm font-medium">
+                  Supabase
+                </div>
+              </div>
+            </motion.div>
+
+            {/* API (Center) */}
+            <motion.div
+              className="col-start-2 row-start-2 self-center"
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+            >
+              <div
+                className={`rounded-2xl bg-gradient-to-br ${flowLayers[1].color} border-2 ${flowLayers[1].borderColor} p-6 backdrop-blur-sm shadow-lg`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`p-3 rounded-xl bg-background/80 ${flowLayers[1].iconColor} shadow-sm`}>
+                    <Brain className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-foreground text-lg">API</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {flowLayers[1].nodes.map((node) => (
+                    <div key={node} className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${flowLayers[1].dotColor} opacity-60`} />
+                      <div className="px-3 py-2 rounded-lg bg-background/70 border border-border/40 text-sm font-medium flex-1">
+                        {node}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Data (Center Right) */}
+            <motion.div
+              className="col-start-3 row-start-2 self-center"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+            >
+              <div
+                className={`rounded-2xl bg-gradient-to-br ${flowLayers[2].color} border ${flowLayers[2].borderColor} p-6 backdrop-blur-sm`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`p-2.5 rounded-xl bg-background/80 ${flowLayers[2].iconColor} shadow-sm`}>
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <span className="font-semibold text-foreground">Data</span>
+                </div>
+                <div className="space-y-2">
+                  {flowLayers[2].nodes.map((node) => (
+                    <div key={node} className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${flowLayers[2].dotColor} opacity-60`} />
+                      <div className="px-3 py-2 rounded-lg bg-background/70 border border-border/40 text-sm font-medium flex-1">
+                        {node}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Deploy (Right) */}
+            <motion.div
+              className="col-start-4 row-start-2 self-center"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.9 }}
+            >
+              <div
+                className={`rounded-2xl bg-gradient-to-br ${flowLayers[3].color} border-2 ${flowLayers[3].borderColor} p-6 backdrop-blur-sm shadow-lg`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`p-2.5 rounded-xl bg-background/80 ${flowLayers[3].iconColor} shadow-sm`}>
+                    <FileCode className="w-5 h-5" />
+                  </div>
+                  <span className="font-semibold text-foreground">Deploy</span>
+                </div>
+                <div className="space-y-2">
+                  {flowLayers[3].nodes.map((node) => (
+                    <div key={node} className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${flowLayers[3].dotColor} opacity-60`} />
+                      <div className="px-3 py-2 rounded-lg bg-background/70 border border-border/40 text-sm font-medium flex-1">
+                        {node}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
           </div>
 
           {/* Feedback Loop */}
@@ -168,10 +357,9 @@ export function BackendFlowDiagram() {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.8 }}
+            transition={{ duration: 0.5, delay: 1.6 }}
           >
             <div className="relative flex items-center gap-4 px-6 py-4 rounded-2xl bg-muted/30 border border-border/50">
-              {/* Curved arrow back */}
               <svg width="24" height="24" viewBox="0 0 24 24" className="text-accent">
                 <path
                   d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"
@@ -194,7 +382,6 @@ export function BackendFlowDiagram() {
 
         {/* Mobile: Vertical Workflow */}
         <div className="lg:hidden relative">
-          {/* Vertical connection line */}
           <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/30 via-accent/30 to-warning/30" />
 
           <div className="space-y-6">
@@ -207,12 +394,12 @@ export function BackendFlowDiagram() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
               >
-                {/* Step Number on the line */}
-                <div className={`absolute left-5 top-6 w-7 h-7 rounded-full ${layer.dotColor} flex items-center justify-center text-white text-xs font-bold shadow-md z-10`}>
+                <div
+                  className={`absolute left-5 top-6 w-7 h-7 rounded-full ${layer.dotColor} flex items-center justify-center text-white text-xs font-bold shadow-md z-10`}
+                >
                   {idx + 1}
                 </div>
 
-                {/* Card */}
                 <div className={`rounded-2xl bg-gradient-to-r ${layer.color} border ${layer.borderColor} p-5`}>
                   <div className="flex items-center gap-3 mb-3">
                     <div className={`p-2 rounded-xl bg-background/80 ${layer.iconColor}`}>
