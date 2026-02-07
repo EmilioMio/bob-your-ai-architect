@@ -1,5 +1,5 @@
 import { Hero } from '@/components/landing/Hero';
-import { InteractiveDemo } from '@/components/landing/InteractiveDemo';
+import { InteractiveDemoBuilder } from '@/components/builder';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { LiveEnforcement } from '@/components/landing/LiveEnforcement';
 import { Features } from '@/components/landing/Features';
@@ -13,7 +13,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Hero />
-      <InteractiveDemo />
+      <InteractiveDemoBuilder />
       <HowItWorks />
       <LiveEnforcement />
       <Features />
