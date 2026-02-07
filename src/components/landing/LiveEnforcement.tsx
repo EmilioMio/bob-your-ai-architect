@@ -1,11 +1,28 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Check, Zap, X, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Check, Zap, X, ArrowRight, TrendingUp } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
-const scenarios = [
+type ScenarioType = 'standard' | 'scalability';
+
+interface Scenario {
+  id: string;
+  title: string;
+  badCode: string;
+  warning: {
+    title: string;
+    message: string;
+  };
+  rule: string;
+  fixedCode: string;
+  type?: ScenarioType;
+  fixButtonText?: string;
+  whyItMatters?: string;
+}
+
+const scenarios: Scenario[] = [
   {
     id: 'api-call',
     title: 'Direct API call in component',
@@ -37,6 +54,7 @@ function UserProfile() {
   const { data } = useQuery(['user'], fetchUser);
   return <div>{data?.name}</div>;
 }`,
+    type: 'standard',
   },
   {
     id: 'wrong-location',
@@ -68,6 +86,7 @@ function UserCard({ user }) {
     </div>
   );
 }`,
+    type: 'standard',
   },
   {
     id: 'large-file',
@@ -101,6 +120,63 @@ function Dashboard() {
 
 // Each component is now focused,
 // testable, and maintainable! ✓`,
+    type: 'standard',
+  },
+  {
+    id: 'future-proof',
+    title: 'Future-Proof Analysis',
+    badCode: `// src/services/UserService.js
+async function syncAllUsers() {
+  const users = await db.query('SELECT * FROM users');
+  
+  // Potential bottleneck detected at 10k+ users
+  for (const user of users) {
+    // Synchronous API call without caching
+    const profile = await fetch(\`/api/profile/\${user.id}\`);
+    const analytics = await fetch(\`/api/analytics/\${user.id}\`);
+    
+    await db.query(
+      'UPDATE users SET profile = ?, analytics = ?',
+      [profile, analytics]
+    );
+  }
+  
+  return { synced: users.length };
+}`,
+    warning: {
+      title: 'Bob detected a scaling risk',
+      message: 'This pattern will cause database locks once you hit ~1,200 concurrent users. Tomorrow\'s target is 10,000.',
+    },
+    rule: 'Batch operations for scale',
+    fixedCode: `// src/services/UserService.js
+import { cache } from '@/lib/cache';
+import { batchProcessor } from '@/lib/batch';
+
+async function syncAllUsers() {
+  const users = await db.query('SELECT * FROM users');
+  
+  // ✓ Batch processing with connection pooling
+  const batches = batchProcessor.chunk(users, 100);
+  
+  for (const batch of batches) {
+    // ✓ Parallel requests with caching
+    const results = await Promise.all(
+      batch.map(user => cache.wrap(
+        \`user:\${user.id}\`,
+        () => fetchUserData(user.id),
+        { ttl: 300 }
+      ))
+    );
+    
+    // ✓ Bulk insert for efficiency
+    await db.bulkUpdate('users', results);
+  }
+  
+  return { synced: users.length };
+}`,
+    type: 'scalability',
+    fixButtonText: 'Optimize for Scale',
+    whyItMatters: 'Scaling isn\'t just about servers; it\'s about code efficiency. Bob analyzes your logic against real-world traffic patterns to ensure you don\'t crash on launch day.',
   },
 ];
 
@@ -110,6 +186,7 @@ const exampleRules = [
   'Max 200 lines per component',
   'Hooks must start with "use"',
   'No inline styles in components',
+  'Batch operations for scale',
 ];
 
 export function LiveEnforcement() {
@@ -284,41 +361,88 @@ export function LiveEnforcement() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="card-elevated p-6 border-l-4 border-l-warning"
+                  className={`card-elevated p-6 border-l-4 ${
+                    activeScenario.type === 'scalability' 
+                      ? 'border-l-amber-500 bg-amber-500/5' 
+                      : 'border-l-warning'
+                  }`}
                 >
                   <div className="flex items-start gap-3">
-                    <AlertTriangle className="w-6 h-6 text-warning flex-shrink-0 mt-0.5" />
+                    {activeScenario.type === 'scalability' ? (
+                      <TrendingUp className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertTriangle className="w-6 h-6 text-warning flex-shrink-0 mt-0.5" />
+                    )}
                     <div className="flex-1">
-                      <h4 className="font-semibold text-foreground mb-2">
-                        ⚠️ {activeScenario.warning.title}
+                      <h4 className={`font-semibold mb-2 ${
+                        activeScenario.type === 'scalability' ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'
+                      }`}>
+                        {activeScenario.type === 'scalability' ? '📈' : '⚠️'} {activeScenario.warning.title}
                       </h4>
                       <p className="text-sm text-muted-foreground whitespace-pre-line mb-4">
                         {activeScenario.warning.message}
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={handleFix}
-                          disabled={isFixing}
-                          className="btn-primary text-sm py-2 px-4"
-                        >
-                          {isFixing ? (
-                            <>
-                              <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                                className="mr-2"
-                              >
-                                <Zap className="w-4 h-4" />
-                              </motion.div>
-                              Fixing...
-                            </>
-                          ) : (
-                            <>
-                              <Zap className="w-4 h-4 mr-2" />
-                              Auto-fix
-                            </>
-                          )}
-                        </button>
+                        {activeScenario.type === 'scalability' ? (
+                          <motion.button
+                            onClick={handleFix}
+                            disabled={isFixing}
+                            className="relative inline-flex items-center justify-center text-sm py-2 px-4 rounded-lg bg-amber-500 text-white font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
+                            animate={!isFixing ? {
+                              boxShadow: [
+                                '0 0 0 0 rgba(245, 158, 11, 0.4)',
+                                '0 0 0 8px rgba(245, 158, 11, 0)',
+                              ]
+                            } : {}}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              ease: 'easeOut'
+                            }}
+                          >
+                            {isFixing ? (
+                              <>
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                  className="mr-2"
+                                >
+                                  <TrendingUp className="w-4 h-4" />
+                                </motion.div>
+                                Optimizing...
+                              </>
+                            ) : (
+                              <>
+                                <TrendingUp className="w-4 h-4 mr-2" />
+                                {activeScenario.fixButtonText || 'Auto-fix'}
+                              </>
+                            )}
+                          </motion.button>
+                        ) : (
+                          <button
+                            onClick={handleFix}
+                            disabled={isFixing}
+                            className="btn-primary text-sm py-2 px-4"
+                          >
+                            {isFixing ? (
+                              <>
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                  className="mr-2"
+                                >
+                                  <Zap className="w-4 h-4" />
+                                </motion.div>
+                                Fixing...
+                              </>
+                            ) : (
+                              <>
+                                <Zap className="w-4 h-4 mr-2" />
+                                Auto-fix
+                              </>
+                            )}
+                          </button>
+                        )}
                         <button 
                           className="btn-ghost text-sm py-2 px-4"
                           onClick={handleIgnore}
@@ -342,19 +466,28 @@ export function LiveEnforcement() {
                   key="success"
                   initial={{ opacity: 0, x: 20, scale: 0.95 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
-                  className="card-elevated p-6 border-l-4 border-l-accent"
+                  className={`card-elevated p-6 border-l-4 ${
+                    activeScenario.type === 'scalability' ? 'border-l-amber-500' : 'border-l-accent'
+                  }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-6 h-6 text-accent" />
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      activeScenario.type === 'scalability' ? 'bg-amber-500/10' : 'bg-accent/10'
+                    }`}>
+                      <Check className={`w-6 h-6 ${
+                        activeScenario.type === 'scalability' ? 'text-amber-500' : 'text-accent'
+                      }`} />
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground mb-2">
-                        ✓ Fixed and following pattern
+                        {activeScenario.type === 'scalability' 
+                          ? '✓ Optimized for scale' 
+                          : '✓ Fixed and following pattern'}
                       </h4>
                       <p className="text-sm text-muted-foreground">
-                        Bob has restructured your code to follow architectural best practices. 
-                        Your codebase is now cleaner and more maintainable.
+                        {activeScenario.type === 'scalability'
+                          ? 'Bob has restructured your code to handle 10,000+ concurrent users with efficient batching and caching.'
+                          : 'Bob has restructured your code to follow architectural best practices. Your codebase is now cleaner and more maintainable.'}
                       </p>
                     </div>
                   </div>
@@ -363,12 +496,13 @@ export function LiveEnforcement() {
             </AnimatePresence>
 
             {/* Info Card */}
-            <div className="card-elevated p-6 bg-muted/30">
+            <div className={`card-elevated p-6 ${
+              activeScenario.type === 'scalability' ? 'bg-amber-500/5 border border-amber-500/20' : 'bg-muted/30'
+            }`}>
               <h4 className="font-medium text-foreground mb-2">Why this matters</h4>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Consistent architecture makes your codebase easier to understand, test, and maintain. 
-                Bob ensures every team member follows the same patterns, reducing code review friction 
-                and onboarding time.
+                {activeScenario.whyItMatters || 
+                  'Consistent architecture makes your codebase easier to understand, test, and maintain. Bob ensures every team member follows the same patterns, reducing code review friction and onboarding time.'}
               </p>
             </div>
           </div>
