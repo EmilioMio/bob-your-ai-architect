@@ -334,7 +334,7 @@ export function BackendFlowDiagram() {
   const isNodeActive = (nodeId: string) => activeNodeId === nodeId;
 
   return (
-    <section className="py-24 md:py-32 bg-background overflow-hidden">
+    <section id="flow-diagram" className="py-24 md:py-32 bg-background overflow-hidden">
       <div className="section-container">
         <motion.div
           className="text-center mb-8"
