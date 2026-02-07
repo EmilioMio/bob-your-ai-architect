@@ -322,127 +322,134 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 5: Visualize the Flow
+  // Slide 5: Visualize the Flow (Tree diagram like website)
   {
     id: 5,
     title: 'Visualize the Flow',
-    subtitle: 'How Bob\'s engine works',
+    subtitle: 'How Bob\'s architecture engine works',
     content: (
-      <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          {[
-            { icon: Monitor, label: 'Input', desc: 'Describe project', color: 'bg-primary', iconColor: 'text-primary-foreground' },
-            { icon: Brain, label: 'Analyze', desc: 'AI synthesis', color: 'bg-accent', iconColor: 'text-accent-foreground' },
-            { icon: Database, label: 'Design', desc: 'Architecture', color: 'bg-blue-500', iconColor: 'text-white' },
-            { icon: Rocket, label: 'Deploy', desc: 'Export & build', color: 'bg-rose-500', iconColor: 'text-white' },
-          ].map((step, idx) => (
-            <motion.div
-              key={idx}
-              className="flex flex-col items-center relative"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + idx * 0.15 }}
-            >
-              <div className={`w-20 h-20 rounded-2xl ${step.color} flex items-center justify-center mb-3 shadow-lg`}>
-                <step.icon className={`w-10 h-10 ${step.iconColor}`} />
+      <div className="max-w-5xl mx-auto">
+        {/* Tree structure visualization */}
+        <div className="flex items-center justify-center gap-2 md:gap-4">
+          {/* Level 1: Input */}
+          <motion.div
+            className="flex flex-col items-center"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            <div className="rounded-2xl bg-card border-2 border-primary/40 p-4 w-28 text-center shadow-lg">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2">
+                <Monitor className="w-5 h-5" />
               </div>
-              <span className="font-semibold text-foreground">{step.label}</span>
-              <span className="text-xs text-muted-foreground">{step.desc}</span>
-              
-              {/* Connector */}
-              {idx < 3 && (
-                <motion.div 
-                  className="hidden md:block absolute top-10 -right-8 w-12"
-                  initial={{ opacity: 0, scaleX: 0 }}
-                  animate={{ opacity: 1, scaleX: 1 }}
-                  transition={{ delay: 0.4 + idx * 0.15 }}
-                >
-                  <div className="h-0.5 bg-gradient-to-r from-border to-primary/50 w-full" />
-                  <ChevronRight className="absolute -right-1 -top-2 w-4 h-4 text-primary/50" />
-                </motion.div>
-              )}
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    ),
-  },
-  // Slide 6: VS Code Integration
-  {
-    id: 6,
-    title: 'VS Code Integration',
-    subtitle: 'Live enforcement as you code',
-    content: (
-      <div className="max-w-3xl mx-auto">
-        <motion.div 
-          className="bg-card rounded-2xl border border-border overflow-hidden shadow-2xl"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="bg-[hsl(var(--code-bg))] px-4 py-3 flex items-center gap-2">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-destructive" />
-              <div className="w-3 h-3 rounded-full bg-warning" />
-              <div className="w-3 h-3 rounded-full bg-accent" />
+              <h3 className="font-semibold text-foreground text-sm">Input</h3>
+              <p className="text-xs text-muted-foreground">Describe project</p>
             </div>
-            <span className="text-[hsl(var(--code-comment))] text-sm ml-2">VS Code - Bob Extension Active</span>
-            <div className="ml-auto bg-accent text-accent-foreground px-2 py-0.5 rounded text-xs font-medium">Live</div>
-          </div>
-          <div className="bg-[hsl(var(--code-bg))] p-6">
-            <pre className="text-sm font-mono text-left">
-              <code>
-                <span className="text-[hsl(var(--code-keyword))]">function</span>
-                <span className="text-[hsl(var(--code-function))]"> Dashboard</span>
-                <span className="text-[hsl(var(--code-text))]">() {'{'}</span>
-                {'\n'}
-                <span className="text-[hsl(var(--code-comment))]">  {'// '}Bob: ✓ Following component patterns</span>
-                {'\n'}
-                <span className="text-[hsl(var(--code-keyword))]">  const</span>
-                <span className="text-[hsl(var(--code-text))]"> data = </span>
-                <span className="text-[hsl(var(--code-function))]">useDashboardData</span>
-                <span className="text-[hsl(var(--code-text))]">();</span>
-                {'\n\n'}
-                <span className="text-[hsl(var(--code-keyword))]">  return</span>
-                <span className="text-[hsl(var(--code-text))]"> {'<'}</span>
-                <span className="text-[hsl(var(--code-string))]">DashboardLayout</span>
-                <span className="text-[hsl(var(--code-text))]">{'>'}</span>
-                <span className="text-[hsl(var(--code-text))]">...</span>
-                <span className="text-[hsl(var(--code-text))]">{'</'}</span>
-                <span className="text-[hsl(var(--code-string))]">DashboardLayout</span>
-                <span className="text-[hsl(var(--code-text))]">{'>'}</span>
-                {'\n'}
-                <span className="text-[hsl(var(--code-text))]">{'}'}</span>
-              </code>
-            </pre>
-            
-            {/* Warning tooltip */}
-            <motion.div 
-              className="mt-4 flex items-start gap-2 p-3 bg-warning/10 rounded-lg border border-warning/20"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              <span className="text-warning text-lg">⚠️</span>
-              <div>
-                <p className="text-sm text-warning font-medium">Architectural suggestion</p>
-                <p className="text-xs text-warning/80">Consider moving data fetching to a server component for better performance</p>
+          </motion.div>
+
+          {/* Connector */}
+          <motion.div 
+            className="w-8 h-0.5 bg-gradient-to-r from-primary/50 to-purple-500/50"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.2 }}
+          />
+
+          {/* Level 2: Agents */}
+          <motion.div
+            className="flex flex-col gap-2"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            {[
+              { icon: Shield, title: 'Security', color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/40' },
+              { icon: Zap, title: 'Performance', color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/40' },
+              { icon: Coins, title: 'Cost', color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/40' },
+            ].map((agent, idx) => (
+              <motion.div
+                key={idx}
+                className={`rounded-xl ${agent.bg} border ${agent.border} p-2 w-24 text-center`}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 + idx * 0.1 }}
+              >
+                <agent.icon className={`w-5 h-5 ${agent.color} mx-auto mb-1`} />
+                <p className="text-xs font-medium text-foreground">{agent.title}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Connector */}
+          <motion.div 
+            className="w-8 h-0.5 bg-gradient-to-r from-amber-500/50 to-accent/50"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.6 }}
+          />
+
+          {/* Level 3: Synthesis */}
+          <motion.div
+            className="flex flex-col items-center"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.7 }}
+          >
+            <div className="rounded-2xl bg-card border-2 border-accent/40 p-4 w-28 text-center shadow-lg">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center mx-auto mb-2">
+                <Brain className="w-5 h-5" />
               </div>
-            </motion.div>
-          </div>
-        </motion.div>
-        
+              <h3 className="font-semibold text-foreground text-sm">Analyze</h3>
+              <p className="text-xs text-muted-foreground">AI synthesis</p>
+            </div>
+          </motion.div>
+
+          {/* Connector */}
+          <motion.div 
+            className="w-8 h-0.5 bg-gradient-to-r from-accent/50 to-rose-500/50"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.8 }}
+          />
+
+          {/* Level 4: Outputs */}
+          <motion.div
+            className="flex flex-col gap-2"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.9 }}
+          >
+            {[
+              { icon: Database, title: 'Design', desc: 'Architecture', color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/40' },
+              { icon: Rocket, title: 'Deploy', desc: 'Export & build', color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/40' },
+            ].map((output, idx) => (
+              <motion.div
+                key={idx}
+                className={`rounded-xl ${output.bg} border ${output.border} p-3 w-28 text-center`}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1 + idx * 0.1 }}
+              >
+                <output.icon className={`w-5 h-5 ${output.color} mx-auto mb-1`} />
+                <p className="text-xs font-medium text-foreground">{output.title}</p>
+                <p className="text-[10px] text-muted-foreground">{output.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* CTA */}
         <motion.div 
-          className="mt-8 flex flex-wrap justify-center gap-4"
+          className="mt-12 flex flex-wrap justify-center gap-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 1.3 }}
         >
           <a href="/" className="btn-primary">
             Try Bob Now
           </a>
           <button className="btn-ghost">
-            Get VS Code Extension
+            View on GitHub
           </button>
         </motion.div>
       </div>
