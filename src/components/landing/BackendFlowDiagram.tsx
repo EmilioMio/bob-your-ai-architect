@@ -109,6 +109,7 @@ function ConnectingLines() {
     <svg
       className="absolute inset-0 w-full h-full pointer-events-none"
       style={{ zIndex: 0 }}
+      preserveAspectRatio="none"
     >
       <defs>
         <linearGradient id="lineGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -123,7 +124,7 @@ function ConnectingLines() {
       
       {/* Input to Agents - curved lines */}
       <motion.path
-        d="M 130 85 C 180 85, 200 50, 280 50"
+        d="M 130 160 C 180 160, 200 80, 280 80"
         fill="none"
         stroke="url(#lineGradient1)"
         strokeWidth="2"
@@ -134,7 +135,7 @@ function ConnectingLines() {
         transition={{ duration: 0.8, delay: 0.2 }}
       />
       <motion.path
-        d="M 130 85 C 180 85, 200 85, 280 85"
+        d="M 130 160 C 180 160, 200 160, 280 160"
         fill="none"
         stroke="url(#lineGradient1)"
         strokeWidth="2"
@@ -145,7 +146,7 @@ function ConnectingLines() {
         transition={{ duration: 0.8, delay: 0.3 }}
       />
       <motion.path
-        d="M 130 85 C 180 85, 200 120, 280 120"
+        d="M 130 160 C 180 160, 200 240, 280 240"
         fill="none"
         stroke="url(#lineGradient1)"
         strokeWidth="2"
@@ -158,7 +159,7 @@ function ConnectingLines() {
       
       {/* Agents to Synthesis */}
       <motion.path
-        d="M 415 50 C 465 50, 485 85, 535 85"
+        d="M 415 80 C 465 80, 485 160, 535 160"
         fill="none"
         stroke="url(#lineGradient1)"
         strokeWidth="2"
@@ -169,7 +170,7 @@ function ConnectingLines() {
         transition={{ duration: 0.8, delay: 0.5 }}
       />
       <motion.path
-        d="M 415 85 C 465 85, 485 85, 535 85"
+        d="M 415 160 C 465 160, 485 160, 535 160"
         fill="none"
         stroke="url(#lineGradient1)"
         strokeWidth="2"
@@ -180,7 +181,7 @@ function ConnectingLines() {
         transition={{ duration: 0.8, delay: 0.6 }}
       />
       <motion.path
-        d="M 415 120 C 465 120, 485 85, 535 85"
+        d="M 415 240 C 465 240, 485 160, 535 160"
         fill="none"
         stroke="url(#lineGradient1)"
         strokeWidth="2"
@@ -193,7 +194,7 @@ function ConnectingLines() {
       
       {/* Synthesis to Outputs */}
       <motion.path
-        d="M 670 85 C 720 85, 740 60, 790 60"
+        d="M 670 160 C 720 160, 740 120, 790 120"
         fill="none"
         stroke="url(#lineGradient2)"
         strokeWidth="2"
@@ -204,7 +205,7 @@ function ConnectingLines() {
         transition={{ duration: 0.8, delay: 0.8 }}
       />
       <motion.path
-        d="M 670 85 C 720 85, 740 110, 790 110"
+        d="M 670 160 C 720 160, 740 200, 790 200"
         fill="none"
         stroke="url(#lineGradient2)"
         strokeWidth="2"
@@ -271,7 +272,7 @@ export function BackendFlowDiagram() {
 
         {/* Desktop: Tree Structure */}
         <div className="hidden lg:block relative max-w-5xl mx-auto">
-          <div className="relative h-[170px]">
+          <div className="relative h-[320px]">
             <ConnectingLines />
             
             {/* Level 1: Input */}
@@ -280,7 +281,7 @@ export function BackendFlowDiagram() {
             </div>
             
             {/* Level 2: Agents */}
-            <div className="absolute left-[280px] top-0 flex flex-col gap-2" style={{ zIndex: 1 }}>
+            <div className="absolute left-[280px] top-1/2 -translate-y-1/2 flex flex-col gap-3" style={{ zIndex: 1 }}>
               {treeData.agents.map((agent, idx) => (
                 <TreeNode key={agent.id} node={agent} delay={0.1 + idx * 0.1} />
               ))}
@@ -292,7 +293,7 @@ export function BackendFlowDiagram() {
             </div>
             
             {/* Level 4: Outputs */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-2" style={{ zIndex: 1 }}>
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-3" style={{ zIndex: 1 }}>
               {treeData.outputs.map((output, idx) => (
                 <TreeNode key={output.id} node={output} delay={0.5 + idx * 0.1} />
               ))}
