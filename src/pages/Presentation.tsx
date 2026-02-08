@@ -18,6 +18,13 @@ import {
   TrendingUp,
   Users,
   DollarSign,
+  AlertTriangle,
+  Map,
+  GitBranch,
+  Layers,
+  HelpCircle,
+  Target,
+  Lightbulb,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -55,9 +62,163 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 2: Tell Bob About Your Project
+  // Slide 2: The Problem - Developer Pain Points
   {
     id: 2,
+    title: "The Architecture Problem",
+    subtitle: "Every developer faces this",
+    content: (
+      <div className="max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left: Pain Points */}
+          <motion.div
+            className="space-y-4"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="text-left mb-6">
+              <h3 className="text-xl font-semibold text-destructive flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                The Struggles
+              </h3>
+            </div>
+            {[
+              {
+                icon: HelpCircle,
+                title: "Junior developers are lost",
+                desc: "No mental map of how backend systems connect",
+                delay: 0.3,
+              },
+              {
+                icon: Layers,
+                title: "Spaghetti architecture",
+                desc: "Code grows chaotically without clear structure",
+                delay: 0.4,
+              },
+              {
+                icon: GitBranch,
+                title: "Inconsistent patterns",
+                desc: "Every team member builds differently",
+                delay: 0.5,
+              },
+              {
+                icon: Clock,
+                title: "Hours lost to decisions",
+                desc: '"Where should this file go?" repeated daily',
+                delay: 0.6,
+              },
+            ].map((pain, idx) => (
+              <motion.div
+                key={idx}
+                className="flex items-start gap-4 bg-destructive/5 border border-destructive/20 rounded-xl p-4 text-left"
+                initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                transition={{ delay: pain.delay, type: "spring", stiffness: 200 }}
+              >
+                <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
+                  <pain.icon className="w-5 h-5 text-destructive" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">{pain.title}</p>
+                  <p className="text-sm text-muted-foreground">{pain.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Right: The Solution */}
+          <motion.div
+            className="space-y-4"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <div className="text-left mb-6">
+              <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
+                <Lightbulb className="w-5 h-5" />
+                Bob's Solution
+              </h3>
+            </div>
+            {[
+              {
+                icon: Map,
+                title: "Visual architecture maps",
+                desc: "See your entire backend structure at a glance",
+                badge: "For beginners",
+                delay: 0.5,
+              },
+              {
+                icon: Target,
+                title: "Battle-tested patterns",
+                desc: "Learn from thousands of successful projects",
+                badge: "For seniors",
+                delay: 0.6,
+              },
+              {
+                icon: FolderTree,
+                title: "Enforced consistency",
+                desc: "Every file has a place, every pattern is documented",
+                badge: "For teams",
+                delay: 0.7,
+              },
+              {
+                icon: Rocket,
+                title: "Scale with confidence",
+                desc: "Architecture that grows with your product",
+                badge: "For growth",
+                delay: 0.8,
+              },
+            ].map((solution, idx) => (
+              <motion.div
+                key={idx}
+                className="flex items-start gap-4 bg-primary/5 border border-primary/20 rounded-xl p-4 text-left"
+                initial={{ opacity: 0, x: 20, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                transition={{ delay: solution.delay, type: "spring", stiffness: 200 }}
+              >
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <solution.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-foreground">{solution.title}</p>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                      {solution.badge}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{solution.desc}</p>
+                </div>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: solution.delay + 0.2, type: "spring" }}
+                >
+                  <Check className="w-5 h-5 text-accent" />
+                </motion.div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Bottom CTA */}
+        <motion.div
+          className="mt-10 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+        >
+          <p className="text-lg text-muted-foreground">
+            Whether you're starting out or scaling up —{" "}
+            <span className="text-primary font-semibold">Bob has your architecture covered</span>
+          </p>
+        </motion.div>
+      </div>
+    ),
+  },
+  // Slide 3: Tell Bob About Your Project
+  {
+    id: 3,
     title: "Tell Bob About Your Project",
     subtitle: "The first step to perfect architecture",
     content: (
@@ -154,9 +315,9 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 3: Architecture Outputs
+  // Slide 4: Architecture Outputs
   {
-    id: 3,
+    id: 4,
     title: "Architecture Outputs",
     subtitle: "Complete project structure generated by Bob",
     content: (
@@ -361,9 +522,9 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 4: What Bob Creates
+  // Slide 5: What Bob Creates
   {
-    id: 4,
+    id: 5,
     title: "What Bob Creates",
     subtitle: "Production-ready architecture",
     content: (
@@ -453,9 +614,9 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 5: See Bob in Action (VS Code)
+  // Slide 6: See Bob in Action (VS Code)
   {
-    id: 5,
+    id: 6,
     title: "See Bob in Action",
     subtitle: "Live enforcement in VS Code",
     content: (
@@ -576,9 +737,9 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 6: Future-Proof Analysis
+  // Slide 7: Future-Proof Analysis
   {
-    id: 6,
+    id: 7,
     title: "Future-Proof Analysis",
     subtitle: "Can your architecture handle growth?",
     content: (
@@ -749,9 +910,9 @@ const slides: Slide[] = [
     ),
   },
 
-  // Slide 7: Statistics & Benefits
+  // Slide 8: Statistics & Benefits
   {
-    id: 7,
+    id: 8,
     title: "Why Bob?",
     subtitle: "The numbers speak for themselves",
     content: (() => {
