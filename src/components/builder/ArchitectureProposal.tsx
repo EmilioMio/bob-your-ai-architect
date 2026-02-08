@@ -154,8 +154,12 @@ export function ArchitectureProposal({
     try {
       const zip = new JSZip();
 
-      // Generate blueprint.json (most important!)
+      // Generate blueprint.json (used by ComplianceChecker, app tooling)
       zip.file("blueprint.json", JSON.stringify(blueprint, null, 2));
+
+      // Also include bob-blueprint.json (used by your VS Code extension / external tooling)
+      zip.file("bob-blueprint.json", JSON.stringify(architecture, null, 2));
+
       setGenerationProgress(10);
       await new Promise((resolve) => setTimeout(resolve, 100));
 
