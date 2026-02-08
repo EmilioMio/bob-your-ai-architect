@@ -62,9 +62,160 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 2: The Problem - Developer Pain Points
+  // Slide 2: What Bob Isn't
   {
     id: 2,
+    title: "What Bob Isn't",
+    subtitle: "Bob makes decisions other tools avoid",
+    content: (
+      <div className="max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {/* Not a Code Generator */}
+          <motion.div
+            className="bg-card rounded-2xl border border-destructive/30 p-6 text-center shadow-xl relative overflow-hidden"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-destructive/5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            />
+            <div className="relative z-10">
+              <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">🚫</span>
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Not a Code Generator</h3>
+              <p className="text-sm text-muted-foreground">
+                Bob doesn't spit out boilerplate. He designs systems that scale.
+              </p>
+            </div>
+            <motion.div
+              className="absolute -bottom-2 -right-2 text-6xl opacity-10"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 4, repeat: Infinity }}
+            >
+              ⌨️
+            </motion.div>
+          </motion.div>
+
+          {/* Not a Chatbot */}
+          <motion.div
+            className="bg-card rounded-2xl border border-destructive/30 p-6 text-center shadow-xl relative overflow-hidden"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-destructive/5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.45 }}
+            />
+            <div className="relative z-10">
+              <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">🚫</span>
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Not a Chatbot</h3>
+              <p className="text-sm text-muted-foreground">
+                Bob doesn't just answer questions. He leads architectural decisions.
+              </p>
+            </div>
+            <motion.div
+              className="absolute -bottom-2 -right-2 text-6xl opacity-10"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              💬
+            </motion.div>
+          </motion.div>
+
+          {/* Not Another Copilot */}
+          <motion.div
+            className="bg-card rounded-2xl border border-destructive/30 p-6 text-center shadow-xl relative overflow-hidden"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-destructive/5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            />
+            <div className="relative z-10">
+              <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">🚫</span>
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Not Another Copilot</h3>
+              <p className="text-sm text-muted-foreground">
+                Bob doesn't autocomplete lines. He architects entire systems.
+              </p>
+            </div>
+            <motion.div
+              className="absolute -bottom-2 -right-2 text-6xl opacity-10"
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+            >
+              ✈️
+            </motion.div>
+          </motion.div>
+        </div>
+
+        {/* What Bob IS */}
+        <motion.div
+          className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-3xl border border-primary/30 p-8 text-center shadow-2xl"
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+        >
+          <motion.div
+            className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-6"
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Brain className="w-10 h-10 text-primary" />
+          </motion.div>
+          <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+            Bob makes decisions other tools avoid
+          </h3>
+          <div className="flex flex-wrap justify-center gap-3 mt-6">
+            {[
+              "Architecture patterns",
+              "Folder structures",
+              "Security policies",
+              "Scalability planning",
+              "Team conventions",
+            ].map((item, idx) => (
+              <motion.span
+                key={idx}
+                className="px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm font-medium"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1 + idx * 0.1 }}
+              >
+                {item}
+              </motion.span>
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.p
+          className="mt-8 text-lg text-muted-foreground"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+        >
+          Where other AI tools generate code, <span className="text-primary font-semibold">Bob architects solutions</span>
+        </motion.p>
+      </div>
+    ),
+  },
+  // Slide 3: The Problem - Developer Pain Points
+  {
+    id: 3,
     title: "The Architecture Problem",
     subtitle: "Every developer faces this",
     content: (
@@ -216,9 +367,9 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 3: Tell Bob About Your Project
+  // Slide 4: Tell Bob About Your Project
   {
-    id: 3,
+    id: 4,
     title: "Tell Bob About Your Project",
     subtitle: "The first step to perfect architecture",
     content: (
@@ -315,9 +466,9 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 4: Architecture Outputs
+  // Slide 5: Architecture Outputs
   {
-    id: 4,
+    id: 5,
     title: "Architecture Outputs",
     subtitle: "Complete project structure generated by Bob",
     content: (
@@ -522,9 +673,9 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 5: What Bob Creates
+  // Slide 6: What Bob Creates
   {
-    id: 5,
+    id: 6,
     title: "What Bob Creates",
     subtitle: "Production-ready architecture",
     content: (
@@ -614,9 +765,9 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 6: See Bob in Action (VS Code)
+  // Slide 7: See Bob in Action (VS Code)
   {
-    id: 6,
+    id: 7,
     title: "See Bob in Action",
     subtitle: "Live enforcement in VS Code",
     content: (
@@ -737,9 +888,9 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 7: Future-Proof Analysis
+  // Slide 8: Future-Proof Analysis
   {
-    id: 7,
+    id: 8,
     title: "Future-Proof Analysis",
     subtitle: "Can your architecture handle growth?",
     content: (
@@ -910,9 +1061,9 @@ const slides: Slide[] = [
     ),
   },
 
-  // Slide 8: Statistics & Benefits
+  // Slide 9: Statistics & Benefits
   {
-    id: 8,
+    id: 9,
     title: "Why Bob?",
     subtitle: "The numbers speak for themselves",
     content: (() => {
