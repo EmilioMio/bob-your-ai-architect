@@ -2,7 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface ChatMessage {
@@ -24,15 +25,15 @@ interface ProjectFormData {
   };
 }
 
-function getTechPreferencesString(techPreferences?: ProjectFormData['techPreferences']): string {
-  if (!techPreferences) return 'None specified';
+function getTechPreferencesString(techPreferences?: ProjectFormData["techPreferences"]): string {
+  if (!techPreferences) return "None specified";
   const all = [
     ...techPreferences.frontend,
     ...techPreferences.backend,
     ...techPreferences.database,
     ...techPreferences.deployment,
   ].filter(Boolean);
-  return all.length > 0 ? all.join(', ') : 'None specified';
+  return all.length > 0 ? all.join(", ") : "None specified";
 }
 
 serve(async (req) => {
@@ -41,9 +42,10 @@ serve(async (req) => {
   }
 
   try {
-    const { action, formData, conversationHistory, userMessage, currentQuestion } = await req.json();
+    const { action, formData, conversationHistory, userMessage, currentQuestion, architecture } = await req.json();
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
+
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
@@ -123,18 +125,19 @@ Return ONLY the JSON object.`;
         break;
 
       case "generate_architecture": {
-        const conversationText = conversationHistory?.map((msg: ChatMessage) => 
-          `${msg.role === 'bot' ? 'Bob' : 'User'}: ${msg.content}`
-        ).join('\n') || '';
+        const conversationText =
+          conversationHistory
+            ?.map((msg: ChatMessage) => `${msg.role === "bot" ? "Bob" : "User"}: ${msg.content}`)
+            .join("\n") || "";
 
         systemPrompt = `You are Bob, a senior software architect with 15+ years of experience designing production systems across all tech stacks - web, mobile, backend, desktop, and embedded systems.`;
-        
+
         userPrompt = `CONVERSATION WITH USER:
 ${conversationText}
 
 PROJECT DETAILS:
 Title: ${formData.project}
-Project Type: ${formData.projectType || 'Not specified'}
+Project Type: ${formData.projectType || "Not specified"}
 Team Size: ${formData.teamSize}
 Timeline: ${formData.timeline}
 Experience Level: ${formData.experience}
@@ -326,10 +329,67 @@ IMPORTANT:
         break;
       }
 
+      case "generate_scaffold_files": {
+        const conversationText =
+          conversationHistory
+            ?.map((msg: ChatMessage) => `${msg.role === "bot" ? "Bob" : "User"}: ${msg.content}`)
+            .join("\n") || "";
+
+        systemPrompt = `You are Bob, a senior software engineer and architect. You generate minimal, runnable starter code for new projects. Output MUST be valid JSON only (no markdown, no backticks).`;
+
+        userPrompt = `CONVERSATION:
+      ${conversationText}
+      
+      PROJECT DETAILS:
+      Title: ${formData.project}
+      Project Type: ${formData.projectType || "Not specified"}
+      Team Size: ${formData.teamSize}
+      Timeline: ${formData.timeline}
+      Experience: ${formData.experience}
+      Tech Preferences: ${getTechPreferencesString(formData.techPreferences)}
+      
+      ARCHITECTURE JSON:
+      ${JSON.stringify(architecture ?? {}, null, 2)}
+
+      
+      TASK:
+      Generate real starter code files for this project so the user can start building immediately.
+      
+      OUTPUT FORMAT (JSON only):
+      {
+        "files": {
+          "frontend/src/pages/Home.jsx": "...",
+          "frontend/src/pages/Home.css": "...",
+          "backend/src/index.ts": "...",
+          "mobile/src/screens/HomeScreen.tsx": "..."
+        }
+      }
+      
+      RULES:
+      - Return ONLY valid JSON. No markdown.
+      - Generate 10–25 files max.
+      - Paths MUST align with the architecture file tree where possible.
+      - The code should be minimal and compile (or be very close).
+      - Use file extensions appropriate to stack:
+        - React/Vite: .jsx/.tsx + .css
+        - Next.js: app/ structure + .tsx
+        - React Native: .tsx + navigation + screen styles
+        - Node/Express: .ts or .js based on architecture/stack
+      - Include at least:
+        WEB: App entry + router + 1–3 pages + basic styling
+        MOBILE: App entry + navigation + 1–2 screens + styles
+        BACKEND: server entry + /health route + example route + env example
+      - Keep it short and practical. No giant boilerplate.
+      
+      Now output the JSON.`;
+        break;
+      }
+
       case "chat_response": {
-        const historyText = conversationHistory?.map((msg: ChatMessage) => 
-          `${msg.role === 'bot' ? 'Bob' : 'User'}: ${msg.content}`
-        ).join('\n') || '';
+        const historyText =
+          conversationHistory
+            ?.map((msg: ChatMessage) => `${msg.role === "bot" ? "Bob" : "User"}: ${msg.content}`)
+            .join("\n") || "";
 
         systemPrompt = `You are Bob, a friendly AI code architect. You're having a conversation about designing software architecture.`;
         userPrompt = `Conversation so far:

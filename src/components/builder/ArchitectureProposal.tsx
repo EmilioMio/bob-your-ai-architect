@@ -26,7 +26,7 @@ import {
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { ProjectFormData, Agent, ChatMessage, GeneratedArchitecture, ArchitectureFile } from "./types";
-import { generateArchitecture } from "@/lib/bob-ai";
+import { generateArchitecture, generateScaffoldFiles } from "@/lib/bob-ai";
 import { DatabaseERDiagram } from "./DatabaseERDiagram";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -154,21 +154,17 @@ export function ArchitectureProposal({
     try {
       const zip = new JSZip();
 
-      // One single file: keep blueprint shape for app tooling,
-      // but include the raw architecture for the VS Code extension.
       zip.file(
         "bob-blueprint.json",
         JSON.stringify(
           {
             ...blueprint,
-            architecture, // <-- embedded raw AI output
+            architecture,
           },
           null,
           2,
         ),
       );
-
-      //
 
       setGenerationProgress(10);
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -197,7 +193,9 @@ export function ArchitectureProposal({
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Generate project structure files
-      const files = generateFileContents(architecture, formData);
+      const placeholderFiles = generateFileContents(architecture, formData);
+      const files = { ...placeholderFiles, ...scaffoldFiles };
+
       const fileEntries = Object.entries(files);
 
       for (let i = 0; i < fileEntries.length; i++) {
@@ -206,6 +204,7 @@ export function ArchitectureProposal({
         if (!["README.md", "ARCHITECTURE.md", "DATABASE.md", "API.md", "bob-blueprint.json"].includes(path)) {
           zip.file(path, content);
         }
+
         setGenerationProgress(50 + Math.round(((i + 1) / fileEntries.length) * 50));
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
@@ -866,6 +865,14 @@ function FileTreeNode({ node, depth = 0 }: { node: ArchitectureFile; depth?: num
       </AnimatePresence>
     </div>
   );
+}
+
+// Generate project-specific starter code files (AI scaffold)
+let scaffoldFiles: Record<string, string> = {};
+try {
+  scaffoldFiles = await generateScaffoldFiles(formData, conversationHistory, architecture as any);
+} catch (e) {
+  console.warn("Scaffold generation failed, continuing with placeholders.", e);
 }
 
 // Generate file contents based on AI architecture + file tree
