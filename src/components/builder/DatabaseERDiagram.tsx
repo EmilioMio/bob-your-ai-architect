@@ -87,17 +87,20 @@ function generateMermaidER(tables: DatabaseTable[], relationships: DatabaseRelat
 
   // Add tables with their columns
   tables.forEach(table => {
+    if (!table?.name) return;
     const safeName = table.name.replace(/[^a-zA-Z0-9_]/g, '_');
     mermaid += `    ${safeName} {\n`;
     
-    table.columns.slice(0, 6).forEach(col => { // Limit to 6 columns for readability
+    const columns = table.columns || [];
+    columns.slice(0, 6).forEach(col => { // Limit to 6 columns for readability
+      if (!col?.name || !col?.type) return;
       const safeColName = col.name.replace(/[^a-zA-Z0-9_]/g, '_');
       const type = simplifyType(col.type);
       const key = col.primaryKey ? ' PK' : col.unique ? ' UK' : col.foreignKey ? ' FK' : '';
       mermaid += `        ${type} ${safeColName}${key}\n`;
     });
     
-    if (table.columns.length > 6) {
+    if (columns.length > 6) {
       mermaid += `        string more_fields\n`;
     }
     
@@ -106,13 +109,16 @@ function generateMermaidER(tables: DatabaseTable[], relationships: DatabaseRelat
 
   // Add relationships
   relationships.forEach(rel => {
+    // Skip if any required field is missing
+    if (!rel?.from || !rel?.to || !rel?.foreignKey) return;
+    
     const safeFrom = rel.from.replace(/[^a-zA-Z0-9_]/g, '_');
     const safeTo = rel.to.replace(/[^a-zA-Z0-9_]/g, '_');
     const safeForeignKey = rel.foreignKey.replace(/[^a-zA-Z0-9_]/g, '_');
     
     // Only add relationship if both tables exist
-    const fromExists = tables.some(t => t.name.replace(/[^a-zA-Z0-9_]/g, '_') === safeFrom);
-    const toExists = tables.some(t => t.name.replace(/[^a-zA-Z0-9_]/g, '_') === safeTo);
+    const fromExists = tables.some(t => t?.name && t.name.replace(/[^a-zA-Z0-9_]/g, '_') === safeFrom);
+    const toExists = tables.some(t => t?.name && t.name.replace(/[^a-zA-Z0-9_]/g, '_') === safeTo);
     
     if (fromExists && toExists) {
       const symbol = 
