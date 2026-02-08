@@ -105,29 +105,48 @@ const slides: Slide[] = [
             </div>
           </motion.div>
 
-          {/* Right: What Bob learns */}
+          {/* Right: Specialized Agents */}
           <motion.div
-            className="flex flex-col justify-center gap-4"
+            className="flex flex-col gap-3"
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
           >
+            <div className="text-left mb-2">
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Specialized Agents Activated</h4>
+            </div>
             {[
-              { icon: Monitor, text: "Project scope & features", color: "text-primary" },
-              { icon: Brain, text: "Team expertise level", color: "text-accent" },
-              { icon: Shield, text: "Security requirements", color: "text-purple-500" },
-              { icon: Zap, text: "Performance needs", color: "text-amber-500" },
-            ].map((item, idx) => (
+              { icon: Brain, name: "Orchestrator", task: "Coordinates architecture decisions", color: "bg-primary/10 border-primary/30", iconColor: "text-primary" },
+              { icon: FolderTree, name: "Structure Agent", task: "Designs folder hierarchy", color: "bg-accent/10 border-accent/30", iconColor: "text-accent" },
+              { icon: Shield, name: "Security Agent", task: "Plans auth & data protection", color: "bg-purple-500/10 border-purple-500/30", iconColor: "text-purple-500" },
+              { icon: Coins, name: "Cost Agent", task: "Optimizes for budget efficiency", color: "bg-amber-500/10 border-amber-500/30", iconColor: "text-amber-500" },
+              { icon: Zap, name: "Performance Agent", task: "Ensures fast load times", color: "bg-rose-500/10 border-rose-500/30", iconColor: "text-rose-500" },
+            ].map((agent, idx) => (
               <motion.div
                 key={idx}
-                className="flex items-center gap-3 bg-card/50 rounded-xl p-4 border border-border"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + idx * 0.1 }}
+                className={`flex items-center gap-3 rounded-xl p-3 border ${agent.color}`}
+                initial={{ opacity: 0, x: 20, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                transition={{ delay: 0.5 + idx * 0.1, type: "spring", stiffness: 200 }}
               >
-                <item.icon className={`w-6 h-6 ${item.color}`} />
-                <span className="text-foreground">{item.text}</span>
-                <Check className="w-5 h-5 text-accent ml-auto" />
+                <motion.div 
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center ${agent.color.replace('border-', 'bg-').split(' ')[0]}`}
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: idx * 0.3 }}
+                >
+                  <agent.icon className={`w-5 h-5 ${agent.iconColor}`} />
+                </motion.div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium text-foreground">{agent.name}</p>
+                  <p className="text-xs text-muted-foreground">{agent.task}</p>
+                </div>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.8 + idx * 0.1, type: "spring" }}
+                >
+                  <Check className="w-4 h-4 text-accent" />
+                </motion.div>
               </motion.div>
             ))}
           </motion.div>
