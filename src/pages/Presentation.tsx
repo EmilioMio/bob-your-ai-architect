@@ -154,397 +154,9 @@ const slides: Slide[] = [
       </div>
     ),
   },
-  // Slide 3: See Bob in Action (VS Code)
+  // Slide 3: Architecture Outputs
   {
     id: 3,
-    title: "See Bob in Action",
-    subtitle: "Live enforcement in VS Code",
-    content: (
-      <div className="max-w-4xl mx-auto">
-        <motion.div
-          className="bg-card rounded-2xl border border-border overflow-hidden shadow-2xl"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          {/* VS Code title bar */}
-          <div className="bg-[hsl(var(--code-bg))] px-4 py-3 flex items-center gap-2 border-b border-[hsl(var(--code-comment))]/20">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-destructive" />
-              <div className="w-3 h-3 rounded-full bg-warning" />
-              <div className="w-3 h-3 rounded-full bg-accent" />
-            </div>
-            <span className="text-[hsl(var(--code-comment))] text-sm ml-2">UserService.ts — my-saas-app</span>
-            <div className="ml-auto flex items-center gap-2">
-              <div className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-bold">B</div>
-              <span className="text-[hsl(var(--code-comment))] text-xs">Bob Active</span>
-            </div>
-          </div>
-
-          {/* VS Code editor */}
-          <div className="bg-[hsl(var(--code-bg))] flex">
-            {/* Line numbers */}
-            <div className="py-4 px-3 text-right text-[hsl(var(--code-comment))] text-sm font-mono select-none border-r border-[hsl(var(--code-comment))]/10">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                <div key={n} className={n === 4 ? "text-warning" : ""}>
-                  {n}
-                </div>
-              ))}
-            </div>
-
-            {/* Code content */}
-            <div className="flex-1 p-4">
-              <pre className="text-sm font-mono text-left">
-                <code>
-                  <span className="text-[hsl(var(--code-keyword))]">export class</span>
-                  <span className="text-[hsl(var(--code-function))]"> UserService</span>
-                  <span className="text-[hsl(var(--code-text))]"> {"{"}</span>
-                  {"\n"}
-                  <span className="text-[hsl(var(--code-keyword))]"> async</span>
-                  <span className="text-[hsl(var(--code-function))]"> fetchUsers</span>
-                  <span className="text-[hsl(var(--code-text))]">() {"{"}</span>
-                  {"\n"}
-                  <span className="text-[hsl(var(--code-comment))]"> {"// "}TODO: Add error handling</span>
-                  {"\n"}
-                  <motion.span
-                    className="bg-warning/20 block -mx-4 px-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                  >
-                    <span className="text-[hsl(var(--code-keyword))]"> const</span>
-                    <span className="text-[hsl(var(--code-text))]"> response = </span>
-                    <span className="text-[hsl(var(--code-keyword))]">await</span>
-                    <span className="text-[hsl(var(--code-function))]"> fetch</span>
-                    <span className="text-[hsl(var(--code-text))]">(</span>
-                    <span className="text-[hsl(var(--code-string))]">'/api/users'</span>
-                    <span className="text-[hsl(var(--code-text))]">);</span>
-                  </motion.span>
-                  <span className="text-[hsl(var(--code-keyword))]"> return</span>
-                  <span className="text-[hsl(var(--code-text))]"> response.</span>
-                  <span className="text-[hsl(var(--code-function))]">json</span>
-                  <span className="text-[hsl(var(--code-text))]">();</span>
-                  {"\n"}
-                  <span className="text-[hsl(var(--code-text))]"> {"}"}</span>
-                  {"\n"}
-                  <span className="text-[hsl(var(--code-text))]">{"}"}</span>
-                </code>
-              </pre>
-            </div>
-          </div>
-
-          {/* Bob warning panel */}
-          <motion.div
-            className="bg-warning/10 border-t border-warning/30 p-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-warning text-xl">⚠️</span>
-              <div className="flex-1 text-left">
-                <p className="text-warning font-semibold text-sm">Architectural Pattern Violation</p>
-                <p className="text-warning/80 text-xs mt-1">
-                  API calls should use the centralized apiClient from /lib/api — Rule: "All API calls through services
-                  layer"
-                </p>
-              </div>
-              <motion.div
-                className="flex gap-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
-              >
-                <button className="px-3 py-1.5 text-xs bg-warning text-warning-foreground rounded-lg font-medium">
-                  Auto-fix
-                </button>
-                <button className="px-3 py-1.5 text-xs bg-transparent border border-warning/50 text-warning rounded-lg">
-                  Ignore
-                </button>
-              </motion.div>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        <motion.p
-          className="mt-6 text-muted-foreground text-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.4 }}
-        >
-          Bob monitors your code in real-time and flags violations of your architectural rules
-        </motion.p>
-      </div>
-    ),
-  },
-  // Slide 4: Future-Proof Analysis
-  {
-    id: 4,
-    title: "Future-Proof Analysis",
-    subtitle: "Can your architecture handle growth?",
-    content: (
-      <div className="max-w-4xl mx-auto">
-        <motion.div
-          className="bg-card rounded-2xl border border-border overflow-hidden shadow-2xl"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          {/* VS Code title bar */}
-          <div className="bg-[hsl(var(--code-bg))] px-4 py-3 flex items-center gap-2 border-b border-[hsl(var(--code-comment))]/20">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-destructive" />
-              <div className="w-3 h-3 rounded-full bg-warning" />
-              <div className="w-3 h-3 rounded-full bg-accent" />
-            </div>
-            <span className="text-[hsl(var(--code-comment))] text-sm ml-2">app.config.ts — my-saas-app</span>
-            <div className="ml-auto flex items-center gap-2">
-              <div className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-bold">B</div>
-              <span className="text-[hsl(var(--code-comment))] text-xs">Bob Active</span>
-            </div>
-          </div>
-
-          {/* VS Code editor */}
-          <div className="bg-[hsl(var(--code-bg))] flex">
-            {/* Line numbers */}
-            <div className="py-4 px-3 text-right text-[hsl(var(--code-comment))] text-sm font-mono select-none border-r border-[hsl(var(--code-comment))]/10">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                <div key={n}>{n}</div>
-              ))}
-            </div>
-
-            {/* Code content */}
-            <div className="flex-1 p-4">
-              <pre className="text-sm font-mono text-left">
-                <code>
-                  <span className="text-[hsl(var(--code-keyword))]">export const</span>
-                  <span className="text-[hsl(var(--code-function))]"> dbConfig</span>
-                  <span className="text-[hsl(var(--code-text))]"> = {"{"}</span>
-                  {"\n"}
-                  <span className="text-[hsl(var(--code-text))]">  pool: {"{"}</span>
-                  {"\n"}
-                  <span className="text-[hsl(var(--code-text))]">    max: </span>
-                  <span className="text-[hsl(var(--code-string))]">10</span>
-                  <span className="text-[hsl(var(--code-text))]">,</span>
-                  {"\n"}
-                  <span className="text-[hsl(var(--code-text))]">    idleTimeout: </span>
-                  <span className="text-[hsl(var(--code-string))]">30000</span>
-                  <span className="text-[hsl(var(--code-text))]">,</span>
-                  {"\n"}
-                  <span className="text-[hsl(var(--code-text))]">  {"}"}</span>
-                  {"\n"}
-                  <span className="text-[hsl(var(--code-text))]">{"}"};</span>
-                  {"\n\n"}
-                  <span className="text-[hsl(var(--code-comment))]">{"// "}Current: ~500 concurrent users</span>
-                </code>
-              </pre>
-            </div>
-          </div>
-
-          {/* Future-Proof Analysis Panel */}
-          <motion.div
-            className="bg-accent/10 border-t border-accent/30 p-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <div className="flex items-start gap-3">
-              <motion.div
-                className="text-accent text-xl"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                🔮
-              </motion.div>
-              <div className="flex-1 text-left">
-                <p className="text-accent font-semibold text-sm">Future-Proof Analysis</p>
-                <p className="text-accent/80 text-xs mt-1">
-                  Analyzing your architecture for scalability bottlenecks...
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Scalability Popup */}
-        <motion.div
-          className="mt-6 bg-card rounded-2xl border border-border shadow-2xl overflow-hidden"
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ delay: 1.0, type: "spring", stiffness: 200 }}
-        >
-          <div className="bg-muted/50 px-4 py-3 border-b border-border flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            <span className="font-semibold text-sm text-foreground">Scalability Report</span>
-            <span className="ml-auto text-xs px-2 py-0.5 rounded bg-accent/20 text-accent">Projection</span>
-          </div>
-          <div className="p-4 space-y-4">
-            {/* User Load Projections */}
-            <div className="space-y-3">
-              {[
-                { users: "1,000", status: "ok", label: "Current capacity", color: "text-accent", bg: "bg-accent" },
-                { users: "5,000", status: "warning", label: "DB pool exhaustion risk", color: "text-warning", bg: "bg-warning" },
-                { users: "10,000+", status: "critical", label: "Requires horizontal scaling", color: "text-destructive", bg: "bg-destructive" },
-              ].map((tier, idx) => (
-                <motion.div
-                  key={idx}
-                  className="flex items-center gap-3"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.2 + idx * 0.15 }}
-                >
-                  <div className="w-20 text-right">
-                    <span className="font-mono text-sm font-semibold text-foreground">{tier.users}</span>
-                    <span className="text-xs text-muted-foreground ml-1">users</span>
-                  </div>
-                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <motion.div
-                      className={`h-full ${tier.bg} rounded-full`}
-                      initial={{ width: 0 }}
-                      animate={{ width: tier.status === "ok" ? "30%" : tier.status === "warning" ? "60%" : "100%" }}
-                      transition={{ delay: 1.4 + idx * 0.15, duration: 0.5 }}
-                    />
-                  </div>
-                  <div className={`text-xs font-medium ${tier.color} w-40 text-left`}>
-                    {tier.label}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Recommendations */}
-            <motion.div
-              className="bg-primary/5 rounded-xl p-3 border border-primary/20"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.8 }}
-            >
-              <p className="text-xs font-semibold text-primary mb-2">💡 Bob's Recommendations</p>
-              <ul className="space-y-1 text-xs text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <Check className="w-3 h-3 text-accent" />
-                  Increase pool.max to 50 for 5k+ users
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3 h-3 text-accent" />
-                  Add read replicas for 10k+ concurrent
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-3 h-3 text-accent" />
-                  Consider Redis caching layer
-                </li>
-              </ul>
-            </motion.div>
-          </div>
-        </motion.div>
-
-        <motion.p
-          className="mt-6 text-muted-foreground text-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.2 }}
-        >
-          Bob proactively identifies scalability bottlenecks before they become problems
-        </motion.p>
-      </div>
-    ),
-  },
-  // Slide 5: What Bob Creates
-  {
-    id: 5,
-    title: "What Bob Creates",
-    subtitle: "Production-ready architecture",
-    content: (
-      <div className="max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* File tree */}
-          <motion.div
-            className="bg-card rounded-2xl border border-border p-6 text-left shadow-xl"
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
-              <FolderTree className="w-5 h-5 text-primary" />
-              <span className="text-sm font-mono text-muted-foreground">my-saas-app/</span>
-            </div>
-            <div className="space-y-1 font-mono text-sm">
-              {[
-                { name: "src/", indent: 0, isFolder: true },
-                { name: "app/", indent: 1, isFolder: true },
-                { name: "(auth)/", indent: 2, isFolder: true },
-                { name: "(dashboard)/", indent: 2, isFolder: true },
-                { name: "components/", indent: 1, isFolder: true, badge: "20 files" },
-                { name: "lib/", indent: 1, isFolder: true },
-                { name: "hooks/", indent: 1, isFolder: true },
-                { name: "package.json", indent: 0, isFolder: false },
-              ].map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  className="flex items-center gap-2"
-                  style={{ paddingLeft: `${item.indent * 16}px` }}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + idx * 0.05 }}
-                >
-                  {item.isFolder ? (
-                    <FolderTree className="w-4 h-4 text-primary" />
-                  ) : (
-                    <FileCode className="w-4 h-4 text-muted-foreground" />
-                  )}
-                  <span className={item.isFolder ? "text-foreground" : "text-muted-foreground"}>{item.name}</span>
-                  {item.badge && (
-                    <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{item.badge}</span>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Rules */}
-          <motion.div
-            className="flex flex-col gap-4"
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <div className="bg-card rounded-xl border border-border p-5">
-              <h4 className="font-semibold text-foreground mb-3">Generated Rules</h4>
-              <div className="space-y-2">
-                {[
-                  "Server components by default",
-                  "Client components only when needed",
-                  "No business logic in page files",
-                  "Consistent naming conventions",
-                ].map((rule, idx) => (
-                  <motion.div
-                    key={idx}
-                    className="flex items-center gap-2 text-sm text-muted-foreground"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 + idx * 0.1 }}
-                  >
-                    <Check className="w-4 h-4 text-accent flex-shrink-0" />
-                    {rule}
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-accent/10 rounded-xl border border-accent/30 p-5">
-              <h4 className="font-semibold text-accent mb-2">Ready to Download</h4>
-              <p className="text-sm text-muted-foreground">
-                Complete project structure with README, configs, and boilerplate code
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-    ),
-  },
-
-  // Slide 6: Architecture Outputs
-  {
-    id: 6,
     title: "Architecture Outputs",
     subtitle: "Complete project structure generated by Bob",
     content: (
@@ -746,6 +358,393 @@ const slides: Slide[] = [
             </motion.div>
           </div>
         </motion.div>
+      </div>
+    ),
+  },
+  // Slide 4: What Bob Creates
+  {
+    id: 4,
+    title: "What Bob Creates",
+    subtitle: "Production-ready architecture",
+    content: (
+      <div className="max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* File tree */}
+          <motion.div
+            className="bg-card rounded-2xl border border-border p-6 text-left shadow-xl"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
+              <FolderTree className="w-5 h-5 text-primary" />
+              <span className="text-sm font-mono text-muted-foreground">my-saas-app/</span>
+            </div>
+            <div className="space-y-1 font-mono text-sm">
+              {[
+                { name: "src/", indent: 0, isFolder: true },
+                { name: "app/", indent: 1, isFolder: true },
+                { name: "(auth)/", indent: 2, isFolder: true },
+                { name: "(dashboard)/", indent: 2, isFolder: true },
+                { name: "components/", indent: 1, isFolder: true, badge: "20 files" },
+                { name: "lib/", indent: 1, isFolder: true },
+                { name: "hooks/", indent: 1, isFolder: true },
+                { name: "package.json", indent: 0, isFolder: false },
+              ].map((item, idx) => (
+                <motion.div
+                  key={idx}
+                  className="flex items-center gap-2"
+                  style={{ paddingLeft: `${item.indent * 16}px` }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + idx * 0.05 }}
+                >
+                  {item.isFolder ? (
+                    <FolderTree className="w-4 h-4 text-primary" />
+                  ) : (
+                    <FileCode className="w-4 h-4 text-muted-foreground" />
+                  )}
+                  <span className={item.isFolder ? "text-foreground" : "text-muted-foreground"}>{item.name}</span>
+                  {item.badge && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{item.badge}</span>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Rules */}
+          <motion.div
+            className="flex flex-col gap-4"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <div className="bg-card rounded-xl border border-border p-5">
+              <h4 className="font-semibold text-foreground mb-3">Generated Rules</h4>
+              <div className="space-y-2">
+                {[
+                  "Server components by default",
+                  "Client components only when needed",
+                  "No business logic in page files",
+                  "Consistent naming conventions",
+                ].map((rule, idx) => (
+                  <motion.div
+                    key={idx}
+                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 + idx * 0.1 }}
+                  >
+                    <Check className="w-4 h-4 text-accent flex-shrink-0" />
+                    {rule}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-accent/10 rounded-xl border border-accent/30 p-5">
+              <h4 className="font-semibold text-accent mb-2">Ready to Download</h4>
+              <p className="text-sm text-muted-foreground">
+                Complete project structure with README, configs, and boilerplate code
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    ),
+  },
+  // Slide 5: See Bob in Action (VS Code)
+  {
+    id: 5,
+    title: "See Bob in Action",
+    subtitle: "Live enforcement in VS Code",
+    content: (
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          className="bg-card rounded-2xl border border-border overflow-hidden shadow-2xl"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          {/* VS Code title bar */}
+          <div className="bg-[hsl(var(--code-bg))] px-4 py-3 flex items-center gap-2 border-b border-[hsl(var(--code-comment))]/20">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-destructive" />
+              <div className="w-3 h-3 rounded-full bg-warning" />
+              <div className="w-3 h-3 rounded-full bg-accent" />
+            </div>
+            <span className="text-[hsl(var(--code-comment))] text-sm ml-2">UserService.ts — my-saas-app</span>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-bold">B</div>
+              <span className="text-[hsl(var(--code-comment))] text-xs">Bob Active</span>
+            </div>
+          </div>
+
+          {/* VS Code editor */}
+          <div className="bg-[hsl(var(--code-bg))] flex">
+            {/* Line numbers */}
+            <div className="py-4 px-3 text-right text-[hsl(var(--code-comment))] text-sm font-mono select-none border-r border-[hsl(var(--code-comment))]/10">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <div key={n} className={n === 4 ? "text-warning" : ""}>
+                  {n}
+                </div>
+              ))}
+            </div>
+
+            {/* Code content */}
+            <div className="flex-1 p-4">
+              <pre className="text-sm font-mono text-left">
+                <code>
+                  <span className="text-[hsl(var(--code-keyword))]">export class</span>
+                  <span className="text-[hsl(var(--code-function))]"> UserService</span>
+                  <span className="text-[hsl(var(--code-text))]"> {"{"}</span>
+                  {"\n"}
+                  <span className="text-[hsl(var(--code-keyword))]"> async</span>
+                  <span className="text-[hsl(var(--code-function))]"> fetchUsers</span>
+                  <span className="text-[hsl(var(--code-text))]">() {"{"}</span>
+                  {"\n"}
+                  <span className="text-[hsl(var(--code-comment))]"> {"// "}TODO: Add error handling</span>
+                  {"\n"}
+                  <motion.span
+                    className="bg-warning/20 block -mx-4 px-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <span className="text-[hsl(var(--code-keyword))]"> const</span>
+                    <span className="text-[hsl(var(--code-text))]"> response = </span>
+                    <span className="text-[hsl(var(--code-keyword))]">await</span>
+                    <span className="text-[hsl(var(--code-function))]"> fetch</span>
+                    <span className="text-[hsl(var(--code-text))]">(</span>
+                    <span className="text-[hsl(var(--code-string))]">'/api/users'</span>
+                    <span className="text-[hsl(var(--code-text))]">);</span>
+                  </motion.span>
+                  <span className="text-[hsl(var(--code-keyword))]"> return</span>
+                  <span className="text-[hsl(var(--code-text))]"> response.</span>
+                  <span className="text-[hsl(var(--code-function))]">json</span>
+                  <span className="text-[hsl(var(--code-text))]">();</span>
+                  {"\n"}
+                  <span className="text-[hsl(var(--code-text))]"> {"}"}</span>
+                  {"\n"}
+                  <span className="text-[hsl(var(--code-text))]">{"}"}</span>
+                </code>
+              </pre>
+            </div>
+          </div>
+
+          {/* Bob warning panel */}
+          <motion.div
+            className="bg-warning/10 border-t border-warning/30 p-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <div className="flex items-start gap-3">
+              <span className="text-warning text-xl">⚠️</span>
+              <div className="flex-1 text-left">
+                <p className="text-warning font-semibold text-sm">Architectural Pattern Violation</p>
+                <p className="text-warning/80 text-xs mt-1">
+                  API calls should use the centralized apiClient from /lib/api — Rule: "All API calls through services
+                  layer"
+                </p>
+              </div>
+              <motion.div
+                className="flex gap-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2 }}
+              >
+                <button className="px-3 py-1.5 text-xs bg-warning text-warning-foreground rounded-lg font-medium">
+                  Auto-fix
+                </button>
+                <button className="px-3 py-1.5 text-xs bg-transparent border border-warning/50 text-warning rounded-lg">
+                  Ignore
+                </button>
+              </motion.div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        <motion.p
+          className="mt-6 text-muted-foreground text-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.4 }}
+        >
+          Bob monitors your code in real-time and flags violations of your architectural rules
+        </motion.p>
+      </div>
+    ),
+  },
+  // Slide 6: Future-Proof Analysis
+  {
+    id: 6,
+    title: "Future-Proof Analysis",
+    subtitle: "Can your architecture handle growth?",
+    content: (
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          className="bg-card rounded-2xl border border-border overflow-hidden shadow-2xl"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          {/* VS Code title bar */}
+          <div className="bg-[hsl(var(--code-bg))] px-4 py-3 flex items-center gap-2 border-b border-[hsl(var(--code-comment))]/20">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-destructive" />
+              <div className="w-3 h-3 rounded-full bg-warning" />
+              <div className="w-3 h-3 rounded-full bg-accent" />
+            </div>
+            <span className="text-[hsl(var(--code-comment))] text-sm ml-2">app.config.ts — my-saas-app</span>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-bold">B</div>
+              <span className="text-[hsl(var(--code-comment))] text-xs">Bob Active</span>
+            </div>
+          </div>
+
+          {/* VS Code editor */}
+          <div className="bg-[hsl(var(--code-bg))] flex">
+            {/* Line numbers */}
+            <div className="py-4 px-3 text-right text-[hsl(var(--code-comment))] text-sm font-mono select-none border-r border-[hsl(var(--code-comment))]/10">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <div key={n}>{n}</div>
+              ))}
+            </div>
+
+            {/* Code content */}
+            <div className="flex-1 p-4">
+              <pre className="text-sm font-mono text-left">
+                <code>
+                  <span className="text-[hsl(var(--code-keyword))]">export const</span>
+                  <span className="text-[hsl(var(--code-function))]"> dbConfig</span>
+                  <span className="text-[hsl(var(--code-text))]"> = {"{"}</span>
+                  {"\n"}
+                  <span className="text-[hsl(var(--code-text))]">  pool: {"{"}</span>
+                  {"\n"}
+                  <span className="text-[hsl(var(--code-text))]">    max: </span>
+                  <span className="text-[hsl(var(--code-string))]">10</span>
+                  <span className="text-[hsl(var(--code-text))]">,</span>
+                  {"\n"}
+                  <span className="text-[hsl(var(--code-text))]">    idleTimeout: </span>
+                  <span className="text-[hsl(var(--code-string))]">30000</span>
+                  <span className="text-[hsl(var(--code-text))]">,</span>
+                  {"\n"}
+                  <span className="text-[hsl(var(--code-text))]">  {"}"}</span>
+                  {"\n"}
+                  <span className="text-[hsl(var(--code-text))]">{"}"};</span>
+                  {"\n\n"}
+                  <span className="text-[hsl(var(--code-comment))]">{"// "}Current: ~500 concurrent users</span>
+                </code>
+              </pre>
+            </div>
+          </div>
+
+          {/* Future-Proof Analysis Panel */}
+          <motion.div
+            className="bg-accent/10 border-t border-accent/30 p-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <div className="flex items-start gap-3">
+              <motion.div
+                className="text-accent text-xl"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                🔮
+              </motion.div>
+              <div className="flex-1 text-left">
+                <p className="text-accent font-semibold text-sm">Future-Proof Analysis</p>
+                <p className="text-accent/80 text-xs mt-1">
+                  Analyzing your architecture for scalability bottlenecks...
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Scalability Popup */}
+        <motion.div
+          className="mt-6 bg-card rounded-2xl border border-border shadow-2xl overflow-hidden"
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: 1.0, type: "spring", stiffness: 200 }}
+        >
+          <div className="bg-muted/50 px-4 py-3 border-b border-border flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            <span className="font-semibold text-sm text-foreground">Scalability Report</span>
+            <span className="ml-auto text-xs px-2 py-0.5 rounded bg-accent/20 text-accent">Projection</span>
+          </div>
+          <div className="p-4 space-y-4">
+            {/* User Load Projections */}
+            <div className="space-y-3">
+              {[
+                { users: "1,000", status: "ok", label: "Current capacity", color: "text-accent", bg: "bg-accent" },
+                { users: "5,000", status: "warning", label: "DB pool exhaustion risk", color: "text-warning", bg: "bg-warning" },
+                { users: "10,000+", status: "critical", label: "Requires horizontal scaling", color: "text-destructive", bg: "bg-destructive" },
+              ].map((tier, idx) => (
+                <motion.div
+                  key={idx}
+                  className="flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.2 + idx * 0.15 }}
+                >
+                  <div className="w-20 text-right">
+                    <span className="font-mono text-sm font-semibold text-foreground">{tier.users}</span>
+                    <span className="text-xs text-muted-foreground ml-1">users</span>
+                  </div>
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <motion.div
+                      className={`h-full ${tier.bg} rounded-full`}
+                      initial={{ width: 0 }}
+                      animate={{ width: tier.status === "ok" ? "30%" : tier.status === "warning" ? "60%" : "100%" }}
+                      transition={{ delay: 1.4 + idx * 0.15, duration: 0.5 }}
+                    />
+                  </div>
+                  <div className={`text-xs font-medium ${tier.color} w-40 text-left`}>
+                    {tier.label}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Recommendations */}
+            <motion.div
+              className="bg-primary/5 rounded-xl p-3 border border-primary/20"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.8 }}
+            >
+              <p className="text-xs font-semibold text-primary mb-2">💡 Bob's Recommendations</p>
+              <ul className="space-y-1 text-xs text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <Check className="w-3 h-3 text-accent" />
+                  Increase pool.max to 50 for 5k+ users
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-3 h-3 text-accent" />
+                  Add read replicas for 10k+ concurrent
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-3 h-3 text-accent" />
+                  Consider Redis caching layer
+                </li>
+              </ul>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        <motion.p
+          className="mt-6 text-muted-foreground text-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2.2 }}
+        >
+          Bob proactively identifies scalability bottlenecks before they become problems
+        </motion.p>
       </div>
     ),
   },
