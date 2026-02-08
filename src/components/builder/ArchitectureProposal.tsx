@@ -154,11 +154,19 @@ export function ArchitectureProposal({
     try {
       const zip = new JSZip();
 
-      // Generate blueprint.json (used by ComplianceChecker, app tooling) personal fix with chat
-      zip.file("blueprint.json", JSON.stringify(blueprint, null, 2));
-
-      // Also include bob-blueprint.json (used by your VS Code extension / external tooling)
-      zip.file("bob-blueprint.json", JSON.stringify(architecture, null, 2));
+      // One single file: keep blueprint shape for app tooling,
+      // but include the raw architecture for the VS Code extension.
+      zip.file(
+        "bob-blueprint.json",
+        JSON.stringify(
+          {
+            ...blueprint,
+            architecture, // <-- embedded raw AI output
+          },
+          null,
+          2,
+        ),
+      );
 
       //
 
@@ -195,7 +203,7 @@ export function ArchitectureProposal({
       for (let i = 0; i < fileEntries.length; i++) {
         const [path, content] = fileEntries[i];
         // Skip files we already generated
-        if (!["README.md", "ARCHITECTURE.md", "DATABASE.md", "API.md", "blueprint.json"].includes(path)) {
+        if (!["README.md", "ARCHITECTURE.md", "DATABASE.md", "API.md", "bob-blueprint.json"].includes(path)) {
           zip.file(path, content);
         }
         setGenerationProgress(50 + Math.round(((i + 1) / fileEntries.length) * 50));
