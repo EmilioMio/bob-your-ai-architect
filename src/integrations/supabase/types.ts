@@ -14,7 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      compliance_reports: {
+        Row: {
+          compliance_score: number
+          created_at: string
+          file_structure: Json
+          id: string
+          local_id: string | null
+          project_id: string | null
+          source_url: string | null
+          status: string
+          suggestions: Json
+          upload_type: string
+          user_id: string | null
+          violations: Json
+        }
+        Insert: {
+          compliance_score?: number
+          created_at?: string
+          file_structure?: Json
+          id?: string
+          local_id?: string | null
+          project_id?: string | null
+          source_url?: string | null
+          status?: string
+          suggestions?: Json
+          upload_type: string
+          user_id?: string | null
+          violations?: Json
+        }
+        Update: {
+          compliance_score?: number
+          created_at?: string
+          file_structure?: Json
+          id?: string
+          local_id?: string | null
+          project_id?: string | null
+          source_url?: string | null
+          status?: string
+          suggestions?: Json
+          upload_type?: string
+          user_id?: string | null
+          violations?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          architecture: Json | null
+          blueprint: Json | null
+          conversation_history: Json
+          created_at: string
+          description: string | null
+          form_data: Json
+          id: string
+          local_id: string | null
+          name: string
+          project_type: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          architecture?: Json | null
+          blueprint?: Json | null
+          conversation_history?: Json
+          created_at?: string
+          description?: string | null
+          form_data?: Json
+          id?: string
+          local_id?: string | null
+          name: string
+          project_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          architecture?: Json | null
+          blueprint?: Json | null
+          conversation_history?: Json
+          created_at?: string
+          description?: string | null
+          form_data?: Json
+          id?: string
+          local_id?: string | null
+          name?: string
+          project_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

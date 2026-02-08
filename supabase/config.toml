@@ -1,1 +1,7 @@
 project_id = "vvorhkjdszbhwestngry"
+
+[functions.bob-ai]
+verify_jwt = false
+
+[functions.analyze-compliance]
+verify_jwt = false
