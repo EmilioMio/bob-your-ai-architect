@@ -4,7 +4,7 @@ import {
   ChevronDown, ChevronRight, FolderTree, FileCode, 
   Download, Copy, ExternalLink, ArrowLeft,
   Check, Lightbulb, Scale, Target, Loader2, X,
-  Database, Server, Code2, RefreshCw
+  Database, Server, Code2, RefreshCw, Save, FolderOpen, FileSearch
 } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -15,16 +15,26 @@ import {
 import { generateArchitecture } from '@/lib/bob-ai';
 import { DatabaseERDiagram } from './DatabaseERDiagram';
 import { Badge } from '@/components/ui/badge';
+import { 
+  generateBlueprint, generateReadme, generateArchitectureDocs, 
+  generateDatabaseDocs, generateApiDocs, Blueprint 
+} from '@/lib/blueprint-generator';
+import { saveProject } from '@/lib/project-storage';
+import { ComplianceChecker } from './ComplianceChecker';
+import { ProjectWorkspace } from './ProjectWorkspace';
+import { SavedProject } from '@/lib/project-storage';
 
 interface ArchitectureProposalProps {
   formData: ProjectFormData;
+  onLoadProject?: (project: SavedProject) => void;
   agents: Agent[];
   conversationHistory: ChatMessage[];
   onBack: () => void;
 }
 
-export function ArchitectureProposal({ formData, agents, conversationHistory, onBack }: ArchitectureProposalProps) {
+export function ArchitectureProposal({ formData, agents, conversationHistory, onBack, onLoadProject }: ArchitectureProposalProps) {
   const [architecture, setArchitecture] = useState<GeneratedArchitecture | null>(null);
+  const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [isGenerating, setIsGenerating] = useState(true);
   const [generationStage, setGenerationStage] = useState('Initializing...');
   const [activeAgents, setActiveAgents] = useState<string[]>([]);
@@ -35,6 +45,10 @@ export function ArchitectureProposal({ formData, agents, conversationHistory, on
   const [isGeneratingFiles, setIsGeneratingFiles] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showWorkspace, setShowWorkspace] = useState(false);
+  const [showComplianceChecker, setShowComplianceChecker] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     loadArchitecture();
@@ -68,7 +82,13 @@ export function ArchitectureProposal({ formData, agents, conversationHistory, on
       clearInterval(stageInterval);
       
       if (generated && typeof generated === 'object') {
-        setArchitecture(generated as unknown as GeneratedArchitecture);
+        const arch = generated as unknown as GeneratedArchitecture;
+        setArchitecture(arch);
+        
+        // Generate blueprint
+        const bp = generateBlueprint(arch, formData);
+        setBlueprint(bp);
+        
         setError(null);
       } else {
         throw new Error('Invalid architecture response');
@@ -107,20 +127,53 @@ export function ArchitectureProposal({ formData, agents, conversationHistory, on
   };
 
   const handleGenerateFiles = async () => {
-    if (!architecture) return;
+    if (!architecture || !blueprint) return;
     setIsGeneratingFiles(true);
     setGenerationProgress(0);
 
     try {
       const zip = new JSZip();
+      
+      // Generate blueprint.json (most important!)
+      zip.file('blueprint.json', JSON.stringify(blueprint, null, 2));
+      setGenerationProgress(10);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Generate documentation files
+      zip.file('README.md', generateReadme(blueprint));
+      setGenerationProgress(20);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      zip.file('ARCHITECTURE.md', generateArchitectureDocs(blueprint));
+      setGenerationProgress(30);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const dbDocs = generateDatabaseDocs(blueprint);
+      if (dbDocs) {
+        zip.file('DATABASE.md', dbDocs);
+      }
+      setGenerationProgress(40);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const apiDocs = generateApiDocs(blueprint);
+      if (apiDocs) {
+        zip.file('API.md', apiDocs);
+      }
+      setGenerationProgress(50);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Generate project structure files
       const files = generateFileContents(architecture, formData);
       const fileEntries = Object.entries(files);
       
       for (let i = 0; i < fileEntries.length; i++) {
         const [path, content] = fileEntries[i];
-        zip.file(path, content);
-        setGenerationProgress(Math.round(((i + 1) / fileEntries.length) * 100));
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Skip files we already generated
+        if (!['README.md', 'ARCHITECTURE.md', 'DATABASE.md', 'API.md', 'blueprint.json'].includes(path)) {
+          zip.file(path, content);
+        }
+        setGenerationProgress(50 + Math.round(((i + 1) / fileEntries.length) * 50));
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
 
       const blob = await zip.generateAsync({ type: 'blob' });
@@ -136,12 +189,48 @@ export function ArchitectureProposal({ formData, agents, conversationHistory, on
     }
   };
 
+  const handleSaveProject = async () => {
+    if (!architecture || !blueprint) return;
+    setIsSaving(true);
+    
+    try {
+      const projectId = await saveProject(
+        architecture.projectName,
+        formData,
+        conversationHistory,
+        architecture,
+        blueprint,
+        currentProjectId || undefined
+      );
+      
+      if (projectId) {
+        setCurrentProjectId(projectId);
+      }
+    } catch (error) {
+      console.error('Error saving project:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleExportArchitecture = () => {
     if (!architecture) return;
     const safeName = architecture.projectName.toLowerCase().replace(/\s+/g, '-');
     
     const jsonBlob = new Blob([JSON.stringify(architecture, null, 2)], { type: 'application/json' });
     saveAs(jsonBlob, `${safeName}-architecture.json`);
+  };
+
+  const handleLoadProject = (project: SavedProject) => {
+    if (project.architecture) {
+      setArchitecture(project.architecture);
+      setBlueprint(project.blueprint);
+      setCurrentProjectId(project.id);
+      setIsGenerating(false);
+    }
+    if (onLoadProject) {
+      onLoadProject(project);
+    }
   };
 
   // Loading state with agent activity
@@ -254,10 +343,28 @@ export function ArchitectureProposal({ formData, agents, conversationHistory, on
             </span>
           </div>
         </div>
-        <button onClick={onBack} className="btn-ghost text-sm">
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to Chat
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setShowWorkspace(true)} 
+            className="btn-ghost text-sm"
+            title="View Projects"
+          >
+            <FolderOpen className="w-4 h-4 mr-1" />
+            Projects
+          </button>
+          <button 
+            onClick={() => setShowComplianceChecker(true)} 
+            className="btn-ghost text-sm"
+            title="Check Compliance"
+          >
+            <FileSearch className="w-4 h-4 mr-1" />
+            Compliance
+          </button>
+          <button onClick={onBack} className="btn-ghost text-sm">
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back
+          </button>
+        </div>
       </div>
 
       {/* Main Layout */}
@@ -558,16 +665,28 @@ export function ArchitectureProposal({ formData, agents, conversationHistory, on
           ) : (
             <>
               <Download className="w-5 h-5 mr-2" />
-              Generate Project Files
+              Download Project
             </>
           )}
         </motion.button>
+        <button 
+          className="btn-ghost px-6 disabled:opacity-50"
+          onClick={handleSaveProject}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="w-4 h-4 mr-2" />
+          )}
+          {currentProjectId ? 'Saved' : 'Save Project'}
+        </button>
         <button 
           className="btn-ghost px-6"
           onClick={handleExportArchitecture}
         >
           <ExternalLink className="w-4 h-4 mr-2" />
-          Export Architecture
+          Export JSON
         </button>
       </div>
 
@@ -653,6 +772,21 @@ export function ArchitectureProposal({ formData, agents, conversationHistory, on
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Project Workspace Modal */}
+      <ProjectWorkspace
+        isOpen={showWorkspace}
+        onClose={() => setShowWorkspace(false)}
+        onSelectProject={handleLoadProject}
+        onNewProject={onBack}
+      />
+
+      {/* Compliance Checker Modal */}
+      <ComplianceChecker
+        blueprint={blueprint || undefined}
+        isOpen={showComplianceChecker}
+        onClose={() => setShowComplianceChecker(false)}
+      />
     </motion.div>
   );
 }
