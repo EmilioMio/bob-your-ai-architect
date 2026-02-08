@@ -194,6 +194,15 @@ export function ArchitectureProposal({
 
       // Generate project structure files
       const placeholderFiles = generateFileContents(architecture, formData);
+      
+      // Generate AI scaffold files
+      let scaffoldFiles: Record<string, string> = {};
+      try {
+        scaffoldFiles = await generateScaffoldFiles(formData, conversationHistory, architecture as unknown as Record<string, unknown>);
+      } catch (e) {
+        console.warn("Scaffold generation failed, continuing with placeholders.", e);
+      }
+      
       const files = { ...placeholderFiles, ...scaffoldFiles };
 
       const fileEntries = Object.entries(files);
@@ -867,13 +876,6 @@ function FileTreeNode({ node, depth = 0 }: { node: ArchitectureFile; depth?: num
   );
 }
 
-// Generate project-specific starter code files (AI scaffold)
-let scaffoldFiles: Record<string, string> = {};
-try {
-  scaffoldFiles = await generateScaffoldFiles(formData, conversationHistory, architecture as any);
-} catch (e) {
-  console.warn("Scaffold generation failed, continuing with placeholders.", e);
-}
 
 // Generate file contents based on AI architecture + file tree
 function generateFileContents(architecture: GeneratedArchitecture, formData: ProjectFormData): Record<string, string> {
