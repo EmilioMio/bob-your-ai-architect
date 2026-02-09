@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { Github, Twitter, Mail } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Github, Twitter, Mail } from "lucide-react";
 
 export function Footer() {
   return (
@@ -26,11 +26,9 @@ export function Footer() {
           {/* Center */}
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Built at Hackathon 2024
+              Built at KTH AI Society x Florent Venture Partners Hackathon 2026
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Open Source (Coming Soon)
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Open Source (Coming Soon)</p>
           </div>
 
           {/* Social Links */}
@@ -61,9 +59,7 @@ export function Footer() {
         </motion.div>
 
         <div className="mt-8 pt-8 border-t border-border text-center">
-          <p className="text-xs text-muted-foreground">
-            © 2024 Bob. All rights reserved.
-          </p>
+          <p className="text-xs text-muted-foreground">© 2024 Bob. All rights reserved.</p>
         </div>
       </div>
     </footer>
